@@ -1,6 +1,11 @@
 import tensorflow as tf
+import cPickle
 
 
+def unpickle(file):
+    with open(file, 'rb') as fo:
+        dict = cPickle.load(fo)
+    return dict
 
 def Encoder(inputs):
     c0 = tf.layers.conv2d(inputs = inputs,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
@@ -66,3 +71,20 @@ def Encoder(inputs):
     fc1 = tf.contrib.layers.fully_connected(fc0, 4096, name "fc1")
 
     return fc1
+
+
+def generator(inputs):
+
+    fc0 = tf.contrib.layers.fully_connected(inputs, 16384, name = "fc0")
+    c0 = tf.layers.conv2d_transpose(inputs = fc0,filters=256,kernel_size=5,activation = tf.nn.relu, strides=(1,1), \
+    kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv0")
+    c1 = tf.layers.conv2d_transpose(inputs = c0,filters=128,kernel_size=5,activation = tf.nn.relu, strides=(1,1), \
+    kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv1")
+    c2 = tf.layers.conv2d_transpose(inputs = c1,filters=32,kernel_size=5,activation = tf.nn.relu, strides=(1,1), \
+    kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv2")
+    c3 = tf.layers.conv2d_transpose(inputs = c2,filters=3,kernel_size=5,activation = tf.nn.relu, strides=(1,1), \
+    kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv3")
+
+    b0 = tf.layers.batch_normalization(inputs = c3,name = "b0")
+    r0 = tf.nn.relu(inputs = b0, name = "r0")
+    return r0
