@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 import cPickle
 
@@ -68,10 +69,30 @@ def Encoder(inputs):
 
 
     fc0 = tf.contrib.layers.fully_connected(mp4, 4096, name = "fc0")
-    fc1 = tf.contrib.layers.fully_connected(fc0, 4096, name "fc1")
+    fc1 = tf.contrib.layers.fully_connected(fc0, 4096, name = "fc1")
 
     return fc1
 
+
+def hash_layer(inputs,beta=1.0,approximation="tanh"):
+    if approximation == "tanh":
+        return np.tanh(beta*inputs)
+    if approximation == "app":
+        app_bottom = np.zeros(len(inputs),dtype=np.int8) - 1  # [-1, ...]
+        app_top = np.zeros(len(inputs),dtype=np.int8) + 1  # [+1, ...]
+        return np.maximum(app_bottom, np.minimum(beta*inputs, app_top))
+    raise NotImplementedError("The approximation `{}` does not exist.".format(approximation))
+
+def test_hash_layer():
+    test_range1 = range(-20, 20, 1)
+    test_layer1 = np.array([v / 10 for v in test_range1])
+    test_tanh_hash1 = hash_layer(test_layer1)
+    test_app_hash1 = hash_layer(test_layer1,approximation="app")
+    print(test_layer1)
+    print(test_tanh_hash1)
+    print(test_app_hash1)
+
+# test_hash_layer()
 
 def generator(inputs):
 
