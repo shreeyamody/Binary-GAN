@@ -88,3 +88,22 @@ def generator(inputs):
     b0 = tf.layers.batch_normalization(inputs = c3,name = "b0")
     r0 = tf.nn.relu(inputs = b0, name = "r0")
     return r0
+
+def discriminator(inputs):
+
+    c0 = tf.layers.conv2d(inputs = inputs,filters=32,kernel_size=5,activation = tf.nn.relu, strides=(1,1), \
+    kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv0")
+
+    c1 = tf.layers.conv2d(inputs = c0,filters=128,kernel_size=5,activation = tf.nn.relu, strides=(1,1), \
+    kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv1")
+
+    c2 = tf.layers.conv2d(inputs = c1,filters=256,kernel_size=5,activation = tf.nn.relu, strides=(1,1), \
+    kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv2")
+
+    c3 = tf.layers.conv2d(inputs = c2,filters=512,kernel_size=5,activation = tf.nn.relu, strides=(1,1), \
+    kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv3")
+
+    fc0 = tf.contrib.layers.fully_connected(inputs, 1024, name = "fc0")
+    s0 = tf.nn.sigmoid(inputs = fc0, name = "s0")
+
+    return s0
