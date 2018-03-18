@@ -4,6 +4,17 @@ import cPickle
 # from pydatset import get_CIFAR10_data
 import matplotlib.pyplot as plt
 
+#parameters
+batch_size = 1
+epochs = 10
+lr = 0.0001
+w = 32
+h = 32
+
+#placeholders
+X = tf.placeholder(tf.float32, [batch_size, channel, w, h])
+# Y = tf.placeholder(tf.float32, [batch_size, channel, w, h])
+
 def read_data():
 
     f = open('cifar-10-batches-py/data_batch_1', 'rb')
@@ -13,10 +24,8 @@ def read_data():
     Y = datadict['labels']
     X = X.reshape(10000, 3, 32, 32).transpose(0,2,3,1).astype("uint8")
     Y = np.array(Y)
-
-    i = np.random.choice(range(len(X)))
-    plt.imsave('h1.png',X[i:i+1][0])
-
+    # i = np.random.choice(range(len(X)))
+    # plt.imsave('h1.png',X[i:i+1][0])
 
     return X,Y
 
@@ -141,3 +150,18 @@ def discriminator(inputs):
     s0 = tf.nn.sigmoid(inputs = fc0, name = "s0")
 
     return s0
+
+encoder_ouput = Encoder(X)
+hash_output = hash_layer(encoder_output)
+generator_output = generator(hash_output)
+
+
+with tf.Session() as sess:
+    init = tf.global_variables_initializer()
+    sess.run(init)
+
+    features,labels = read_data()
+
+    for e in range(epochs):
+        num_batches = int(len(features)/batch_size)
+        optimizer = sess.run(generator_output,feed_dict = {X: features, Y: labels})
