@@ -1,12 +1,25 @@
 import numpy as np
 import tensorflow as tf
 import cPickle
+# from pydatset import get_CIFAR10_data
+import matplotlib.pyplot as plt
+
+def read_data():
+
+    f = open('cifar-10-batches-py/data_batch_1', 'rb')
+    datadict = cPickle.load(f)
+    f.close()
+    X = datadict["data"]
+    Y = datadict['labels']
+    X = X.reshape(10000, 3, 32, 32).transpose(0,2,3,1).astype("uint8")
+    Y = np.array(Y)
+
+    i = np.random.choice(range(len(X)))
+    plt.imsave('h1.png',X[i:i+1][0])
 
 
-def unpickle(file):
-    with open(file, 'rb') as fo:
-        dict = cPickle.load(fo)
-    return dict
+    return X,Y
+
 
 def Encoder(inputs):
     c0 = tf.layers.conv2d(inputs = inputs,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
