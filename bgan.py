@@ -16,19 +16,20 @@ h = 32
 channel = 3
 
 #placeholders
-X = tf.placeholder(tf.float32, [batch_size, channel, w, h])
-print tf.shape(X)
+X = tf.placeholder(tf.float32, [batch_size, w,h,channel])
+print "placeholder", tf.shape(X)
 # Y = tf.placeholder(tf.float32, [batch_size, channel, w, h])
 
 def read_data():
 
-    f = open('cifar-10-batches-py/data_batch_1', 'rb')
+    f = open('datasets/cifar-10-batches-py/data_batch_1', 'rb')
     datadict = cPickle.load(f)
     f.close()
     features = datadict["data"]
     labels = datadict['labels']
     features = features.reshape(10000, 3, 32, 32).transpose(0,2,3,1).astype("uint8")
     labels = np.array(labels)
+    print "while reading data", features.shape
     # i = np.random.choice(range(len(X)))
     # plt.imsave('h1.png',X[i:i+1][0])
 
@@ -172,4 +173,5 @@ with tf.Session() as sess:
     for e in range(epochs):
         num_batches = int(len(features)/batch_size)
         for i in range(10000):
-            optimizer = sess.run(generator_output,feed_dict = {X: features[i]})
+            f = features[i].reshape(1,32,32,3)
+            optimizer = sess.run(generator_output,feed_dict = {X: f})
