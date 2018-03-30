@@ -1,4 +1,7 @@
+from __future__ import print_function
 import numpy as np
+import scipy
+import scipy.io as sio
 import tensorflow as tf
 try:
     import cPickle
@@ -8,21 +11,23 @@ except:
 import matplotlib.pyplot as plt
 
 #parameters
+data_batch_size = 10000
 batch_size = 1
-epochs = 10
+epochs = 1
 lr = 0.0001
 w64 = 64
 h64 = 64
 w224 = 224
 h224 = 224
 channels = 3
+S = sio.loadmat('./S_K1_20_K2_30.mat')['S']  # similarity matrix
 
 #placeholders
 true_img_64 = tf.placeholder(tf.float32, [batch_size, w64,h64,channels])
 true_img_224 = tf.placeholder(tf.float32, [batch_size, w224,h224,channels])
 
-print "X64 placeholder", tf.shape(X64)
-print "X224 placeholder", tf.shape(X224)
+print("X64 placeholder", tf.shape(true_img_64))
+print("X224 placeholder", tf.shape(true_img_224))
 
 # Y = tf.placeholder(tf.float32, [batch_size, channels, w, h])
 
@@ -33,10 +38,10 @@ def read_data():
     f.close()
     features = datadict["data"]
     # labels = datadict['labels']
-    features = features.reshape(10000, channels, w64, w64).transpose(0,2,3,1).astype("uint8")
+    features = features.reshape(data_batch_size, channels, w64, w64).transpose(0,2,3,1).astype("uint8")
     #change resize to 64*64
     # labels = np.array(labels)
-    print "while reading data - features.shape", features.shape
+    print("while reading data - features.shape", features.shape)
     # i = np.random.choice(range(len(X)))
     # plt.imsave('h1.png',X[i:i+1][0])
 
@@ -122,7 +127,8 @@ def Encoder(inputs): # change use 224 shape
 
 def hash_layer(inputs,beta=1.0,approximation="tanh"):# dimensions
     if approximation == "tanh":
-        return tf.nn.tanh(beta*inputs)
+        t = tf.nn.tanh(beta*inputs)
+        return t
     # if approximation == "app":
     #     app_bottom = np.zeros(len(inputs),dtype=np.int8) - 1  # [-1, ...]
     #     app_top = np.zeros(len(inputs),dtype=np.int8) + 1  # [+1, ...]
@@ -181,7 +187,8 @@ def discriminator(inputs,reuse):
 def N_losses(b,s):
 
     #neighborhood loss
-    N_loss = 0.5 * tf.reduced_sum(tf.square((1/len(b) * tf.matmul(b,b,transpose_a = True)) - s ))
+    N_loss = 0.5 * tf.reduce_sum(tf.square((1/tf.size(b) * tf.matmul(b,b,transpose_a = True)) - s ))
+    # N_loss = 0.5 * tf.reduce_sum(tf.square((1/tf.size(b) * tf.matmul(tf.transpose(b),b)) - s ))
     return N_loss
 
 def C_losses(true_img,gen_img):
@@ -190,8 +197,8 @@ def C_losses(true_img,gen_img):
     last_conv_gen_img,_ = discriminator(gen_img,True)
 
     #check shapes
-    MSE_loss = tf.reduced_mean(tf.square(true_img-gen_img))
-    P_loss = tf.reduced_mean(tf.square(last_conv_true_img - last_conv_gen_img))
+    MSE_loss = tf.reduce_mean(tf.square(true_img-gen_img))
+    P_loss = tf.reduce_mean(tf.square(last_conv_true_img - last_conv_gen_img))
 
     C_loss = MSE_loss + P_loss
     return C_loss
@@ -206,7 +213,9 @@ def A_losses(true_img,gen_img):
 
 
 encoder_output = Encoder(true_img_224)
+print("encoder_output.shape=", encoder_output.shape)
 b = hash_layer(encoder_output)
+print("b.shape=", b.shape)
 gen_img = generator(b)
 
 t_vars = tf.trainable_variables()
@@ -215,7 +224,7 @@ e_vars = [var for var in t_vars if "enc" in var.name]
 d_vars = [var for var in t_vars if "disc" in var.name]
 g_vars = [var for var in t_vars if "gen" in var.name]
 
-n_l = N_losses(b,s)
+n_l = N_losses(b,S)
 c_l = C_losses(true_img_64,gen_img)
 a_l = A_losses(true_img_64,gen_img)
 
@@ -237,10 +246,12 @@ with tf.Session() as sess:
     for e in range(epochs):
         for i in range(len(features)):
 
-            f_64 = features[i].reshape(batch_size,w64,w64,channels)
-            optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
+            # f_64 = features[i].reshape(batch_size,w64,w64,channels)
+            f_64 = features[i]
+            # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
+            optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64})
 
             for g_step in range(5):
-                g_optimizer = sess.run(g_optim,feed_dict = {X: f})
+                g_optimizer = sess.run(g_optim,feed_dict = {true_img_64: f_64})
             for d_step in range(1):
-                d_optimizer = sess.run(d_optim,feed_dict = {X: f})
+                d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: f_64})
