@@ -76,6 +76,10 @@ def Encoder(inputs): # change use 224 shape
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv6")
 
         # change add conv layer
+
+        c6 = tf.layers.conv2d(inputs = c6,filters=256,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv6_extra")
+
         mp2 = tf.layers.max_pooling2d(inputs = c6,pool_size = 2,strides = 2,  padding='same',name="mp2")
 
 
@@ -88,6 +92,9 @@ def Encoder(inputs): # change use 224 shape
 
         c9 = tf.layers.conv2d(inputs = c8,filters=512,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv9")
+
+        c9 = tf.layers.conv2d(inputs = c9,filters=512,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv9_extra")
 
         #conv layer
         mp3 = tf.layers.max_pooling2d(inputs = c9,pool_size = 2,strides = 2,  padding='same',name="mp3")
@@ -103,26 +110,30 @@ def Encoder(inputs): # change use 224 shape
         c12 = tf.layers.conv2d(inputs = c11,filters=512,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv12")
 
+        c12 = tf.layers.conv2d(inputs = c12,filters=512,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv12_extra")
+
         #conv layer
         mp4 = tf.layers.max_pooling2d(inputs = c12,pool_size = 2,strides = 2,  padding='same',name="mp4")
 
 
 
-        fc0 = tf.contrib.layers.fully_connected(mp4, 4096)
-        fc1 = tf.contrib.layers.fully_connected(fc0, 4096)
+        fc0 = tf.contrib.layers.fully_connected(mp4,4096,activation_fn=tf.nn.relu)
+        fc1 = tf.contrib.layers.fully_connected(fc0, 4096,activation_fn=tf.nn.relu)
         fc2 = tf.contrib.layers.fully_connected(fc1, 32)
         t0 = tf.nn.tanh(fc2)
-        fc3 = tf.contrib.layers.fully_connected(t0, 32)
+        fc3 = tf.contrib.layers.fully_connected(fc1, 32)
 
 
         #change save fully_connected
 
-        return fc3
+        return t0,fc3
 
 
 def hash_layer(inputs,beta=1.0,approximation="tanh"):# dimensions
     if approximation == "tanh":
-        return tf.nn.tanh(beta*inputs)
+        t =  tf.nn.tanh(beta*inputs)
+        return t
     # if approximation == "app":
     #     app_bottom = np.zeros(len(inputs),dtype=np.int8) - 1  # [-1, ...]
     #     app_top = np.zeros(len(inputs),dtype=np.int8) + 1  # [+1, ...]
@@ -181,7 +192,7 @@ def discriminator(inputs,reuse):
 def N_losses(b,s):
 
     #neighborhood loss
-    N_loss = 0.5 * tf.reduced_sum(tf.square((1/len(b) * tf.matmul(b,b,transpose_a = True)) - s ))
+    N_loss = 0.5 * tf.reduce_sum(tf.square((1/len(b) * tf.matmul(tf.transpose(b),b)) - s ))
     return N_loss
 
 def C_losses(true_img,gen_img):
