@@ -99,6 +99,7 @@ def Encoder(inputs): # change use 224 shape
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv6_extra")
 
         # change add conv layer
+
         mp2 = tf.layers.max_pooling2d(inputs = c6,pool_size = 2,strides = 2,  padding='same',name="mp2")
 
 
@@ -134,7 +135,6 @@ def Encoder(inputs): # change use 224 shape
 
         #conv layer
         mp4 = tf.layers.max_pooling2d(inputs = c12,pool_size = 2,strides = 2,  padding='same',name="mp4")
-
 
 
         fc0 = tf.contrib.layers.fully_connected(mp4, 4096,activation_fn=tf.nn.relu)
