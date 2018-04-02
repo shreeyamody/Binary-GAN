@@ -2,6 +2,7 @@ from __future__ import print_function
 import numpy as np
 import scipy
 import scipy.io as sio
+import cv2
 import tensorflow as tf
 try:
     import cPickle
@@ -35,22 +36,33 @@ print("X224 placeholder", tf.shape(true_img_224))
 def read_data():
 
     f = open('datasets/cifar-10-batches-py/data_batch_1', 'rb')
-    datadict = cPickle.load(f)
+    try:
+        datadict = cPickle.load(f)
+    except:
+        f.seek(0)
+        # datadict = cPickle.load(f, encoding="utf-8")
+        datadict = cPickle.load(f, encoding="latin1")
     f.close()
     features = datadict["data"]
     # labels = datadict['labels']
-    features = features.reshape(data_batch_size, channels, w32, w32).transpose(0,2,3,1).astype("uint8")
+    features = features.reshape(data_batch_size, channels, 32, 32).transpose(0,2,3,1).astype("uint8")
     #change resize to 64*64
     # labels = np.array(labels)
     print("while reading data - features.shape", features.shape)
-    for image_file in features:
-        img = cv2.imread(image_file)
-        img = cv2.resize(img, (w224, h224)).astype(np.float32)
-    # i = np.random.choice(range(len(X)))
-    # plt.imsave('h1.png',X[i:i+1][0])
+    x224 = []
+    x64 = []
+    # for _, image_file in enumerate(features):
+    for _, img in enumerate(features):
+       # img = cv2.imread(image_file)
+       img224 = cv2.resize(img, (w224, h224)).astype(np.float32)    # i = np.random.choice(range(len(X)))
+       x224.append(img224)
+       img64 = cv2.resize(img, (w64, h64)).astype(np.float32)    # i = np.random.choice(range(len(X)))
+       x64.append(img64)
+    # print("len(images)=", len(images))
+    # print("images[0].shape=", images[0].shape)
+    # # plt.imsave('h1.png',X[i:i+1][0])
 
-    return features
-read_data()
+    return x224, x64
 
 def Encoder(inputs): # change use 224 shape
     with tf.variable_scope("enc", reuse=False) as scope:
@@ -84,10 +96,10 @@ def Encoder(inputs): # change use 224 shape
         c6 = tf.layers.conv2d(inputs = c5,filters=256,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv6")
 
-        # change add conv layer
-
         c6 = tf.layers.conv2d(inputs = c6,filters=256,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv6_extra")
+
+        # change add conv layer
 
         mp2 = tf.layers.max_pooling2d(inputs = c6,pool_size = 2,strides = 2,  padding='same',name="mp2")
 
@@ -126,17 +138,15 @@ def Encoder(inputs): # change use 224 shape
         mp4 = tf.layers.max_pooling2d(inputs = c12,pool_size = 2,strides = 2,  padding='same',name="mp4")
 
 
-
-        fc0 = tf.contrib.layers.fully_connected(mp4,4096,activation_fn=tf.nn.relu)
+        fc0 = tf.contrib.layers.fully_connected(mp4, 4096,activation_fn=tf.nn.relu)
         fc1 = tf.contrib.layers.fully_connected(fc0, 4096,activation_fn=tf.nn.relu)
         fc2 = tf.contrib.layers.fully_connected(fc1, 32)
         t0 = tf.nn.tanh(fc2)
-        fc3 = tf.contrib.layers.fully_connected(fc1, 32)
 
 
         #change save fully_connected
 
-        return t0,fc3
+        return t0, fc2
 
 
 def hash_layer(inputs,beta=1.0,approximation="tanh"):# dimensions
@@ -259,16 +269,17 @@ with tf.Session() as sess:
     init = tf.global_variables_initializer()
     sess.run(init)
 
-    features = read_data()
+    features224, features64 = read_data()
     # print features.shape
 
     for e in range(epochs):
-        for i in range(len(features)):
+        for i in range(len(features224)):
 
             # f_64 = features[i].reshape(batch_size,w64,w64,channels)
-            f_64 = features[i]
+            f_244 = features224[i]
+            f_64 = features64[i]
             # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
-            optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64,beta_nima:[-2]})
+            optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64,true_img_224: f_224,beta_nima:[-2]})
 
             for g_step in range(5):
                 g_optimizer = sess.run(g_optim,feed_dict = {true_img_64: f_64})
