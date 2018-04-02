@@ -25,6 +25,7 @@ S = sio.loadmat('./S_K1_20_K2_30.mat')['S']  # similarity matrix
 #placeholders
 true_img_64 = tf.placeholder(tf.float32, [batch_size, w64,h64,channels])
 true_img_224 = tf.placeholder(tf.float32, [batch_size, w224,h224,channels])
+beta_nima = tf.placeholder(tf.float32,[1])
 
 print("X64 placeholder", tf.shape(true_img_64))
 print("X224 placeholder", tf.shape(true_img_224))
@@ -38,15 +39,18 @@ def read_data():
     f.close()
     features = datadict["data"]
     # labels = datadict['labels']
-    features = features.reshape(data_batch_size, channels, w64, w64).transpose(0,2,3,1).astype("uint8")
+    features = features.reshape(data_batch_size, channels, w32, w32).transpose(0,2,3,1).astype("uint8")
     #change resize to 64*64
     # labels = np.array(labels)
     print("while reading data - features.shape", features.shape)
+    for image_file in features:
+        img = cv2.imread(image_file)
+        img = cv2.resize(img, (w224, h224)).astype(np.float32)
     # i = np.random.choice(range(len(X)))
     # plt.imsave('h1.png',X[i:i+1][0])
 
     return features
-
+read_data()
 
 def Encoder(inputs): # change use 224 shape
     with tf.variable_scope("enc", reuse=False) as scope:
@@ -222,9 +226,14 @@ def A_losses(true_img,gen_img):
     return A_loss
 
 
-encoder_output = Encoder(true_img_224)
-print("encoder_output.shape=", encoder_output.shape)
-b = hash_layer(encoder_output)
+# encoder_output = Encoder(true_img_224)
+with tf.variable_scope("enc"):
+    vgg_net = Vgg19('./vgg19.npy', codelen=32)
+    vgg_net.build(x224, beta_nima, train_model)
+    z_x_mean = vgg_net.fc9
+    z_x_log_sigma_sq = vgg_net.fc10
+print("encoder_output.shape=", z_x_mean.shape)
+b = hash_layer(z_x_mean)
 print("b.shape=", b.shape)
 gen_img = generator(b)
 
@@ -259,7 +268,7 @@ with tf.Session() as sess:
             # f_64 = features[i].reshape(batch_size,w64,w64,channels)
             f_64 = features[i]
             # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
-            optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64})
+            optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64,beta_nima:[-2]})
 
             for g_step in range(5):
                 g_optimizer = sess.run(g_optim,feed_dict = {true_img_64: f_64})
