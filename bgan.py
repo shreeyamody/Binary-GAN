@@ -1,8 +1,9 @@
-from __future__ import print_function
+from __future__ import division, print_function
 import numpy as np
 import scipy
 import scipy.io as sio
 import cv2
+from generator import Vgg19
 import tensorflow as tf
 try:
     import cPickle
@@ -173,6 +174,7 @@ def test_hash_layer():
 def generator(inputs):#change check shape #change range of true and gen images
     with tf.variable_scope("gen", reuse=False) as scope:
         fc0 = tf.contrib.layers.fully_connected(inputs, 16384)
+        fc0 = tf.reshape(fc0, [batch_size, 8, 8, 256])
         c0 = tf.layers.conv2d_transpose(inputs = fc0,filters=256,kernel_size=5,activation = tf.nn.relu, strides=(2,2), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv0")
         c1 = tf.layers.conv2d_transpose(inputs = c0,filters=128,kernel_size=5,activation = tf.nn.relu, strides=(2,2), \
@@ -186,7 +188,7 @@ def generator(inputs):#change check shape #change range of true and gen images
         r0 = tf.nn.elu(b0, name = "r0") #change or sigmoid?
         return r0
 
-def discriminator(inputs,reuse):
+def discriminator(inputs,reuse=False):
 
     with tf.variable_scope("disc", reuse=reuse) as scope:
         c0 = tf.layers.conv2d(inputs = inputs,filters=32,kernel_size=5,activation = tf.nn.elu, strides=(1,1), \
@@ -211,14 +213,18 @@ def discriminator(inputs,reuse):
 def N_losses(b,s):
 
     #neighborhood loss
-    N_loss = 0.5 * tf.reduce_sum(tf.square((1/tf.size(b) * tf.matmul(b,b,transpose_a = True)) - s ))
+    mm = tf.matmul(b,b,transpose_b = True)
+    # foo = (1/tf.size(b, out_type=tf.float32) * mm)
+    foo = (1/32 * mm)
+    asum = tf.square(foo - s )
+    N_loss = 0.5 * tf.reduce_sum(asum)
     # N_loss = 0.5 * tf.reduce_sum(tf.square((1/tf.size(b) * tf.matmul(tf.transpose(b),b)) - s ))
     return N_loss
 
 def C_losses(true_img,gen_img):
     #content loss
-    last_conv_true_img,_ = discriminator(true_img)
-    last_conv_gen_img,_ = discriminator(gen_img,True)
+    last_conv_true_img,_ = discriminator(true_img, True)
+    last_conv_gen_img,_ = discriminator(gen_img, True)
 
     #check shapes
     MSE_loss = tf.reduce_mean(tf.square(true_img-gen_img))
@@ -237,21 +243,24 @@ def A_losses(true_img,gen_img):
 
 
 # encoder_output = Encoder(true_img_224)
+train_model = tf.placeholder(tf.bool)
 with tf.variable_scope("enc"):
     vgg_net = Vgg19('./vgg19.npy', codelen=32)
-    vgg_net.build(x224, beta_nima, train_model)
+    vgg_net.build(true_img_224, beta_nima, train_model)
     z_x_mean = vgg_net.fc9
     z_x_log_sigma_sq = vgg_net.fc10
 print("encoder_output.shape=", z_x_mean.shape)
 b = hash_layer(z_x_mean)
 print("b.shape=", b.shape)
 gen_img = generator(b)
+disc_image = discriminator(gen_img)
 
 t_vars = tf.trainable_variables()
+print("t_vars=", t_vars)
 
 e_vars = [var for var in t_vars if "enc" in var.name]
-d_vars = [var for var in t_vars if "disc" in var.name]
 g_vars = [var for var in t_vars if "gen" in var.name]
+d_vars = [var for var in t_vars if "disc" in var.name]
 
 n_l = N_losses(b,S)
 c_l = C_losses(true_img_64,gen_img)
@@ -276,10 +285,10 @@ with tf.Session() as sess:
         for i in range(len(features224)):
 
             # f_64 = features[i].reshape(batch_size,w64,w64,channels)
-            f_244 = features224[i]
+            f_224 = features224[i]
             f_64 = features64[i]
             # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
-            optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64,true_img_224: f_224,beta_nima:[-2]})
+            optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
 
             for g_step in range(5):
                 g_optimizer = sess.run(g_optim,feed_dict = {true_img_64: f_64})
