@@ -10,6 +10,7 @@ try:
 except:
     import pickle as cPickle
 # from pydatset import get_CIFAR10_data
+import matplotlib
 import matplotlib.pyplot as plt
 
 #parameters
@@ -29,8 +30,8 @@ true_img_64 = tf.placeholder(tf.float32, [batch_size, w64,h64,channels])
 true_img_224 = tf.placeholder(tf.float32, [batch_size, w224,h224,channels])
 beta_nima = tf.placeholder(tf.float32,[1])
 
-print("X64 placeholder", tf.shape(true_img_64))
-print("X224 placeholder", tf.shape(true_img_224))
+# print("X64 placeholder", tf.shape(true_img_64))
+# print("X224 placeholder", tf.shape(true_img_224))
 
 # Y = tf.placeholder(tf.float32, [batch_size, channels, w, h])
 
@@ -49,7 +50,7 @@ def read_data():
     features = features.reshape(data_batch_size, channels, 32, 32).transpose(0,2,3,1).astype("uint8")
     #change resize to 64*64
     # labels = np.array(labels)
-    print("while reading data - features.shape", features.shape)
+    # print("while reading data - features.shape", features.shape)
     x224 = []
     x64 = []
     # for _, image_file in enumerate(features):
@@ -172,6 +173,7 @@ def test_hash_layer():
 # test_hash_layer()
 
 def generator(inputs):#change check shape #change range of true and gen images
+    inputs = tf.Print(inputs, [inputs], message="START `generator`:")
     with tf.variable_scope("gen", reuse=False) as scope:
         fc0 = tf.contrib.layers.fully_connected(inputs, 16384)
         fc0 = tf.reshape(fc0, [batch_size, 8, 8, 256])
@@ -189,7 +191,7 @@ def generator(inputs):#change check shape #change range of true and gen images
         return r0
 
 def discriminator(inputs,reuse=False):
-
+    # tf.Print("START `discriminator`:", inputs.shape)
     with tf.variable_scope("disc", reuse=reuse) as scope:
         c0 = tf.layers.conv2d(inputs = inputs,filters=32,kernel_size=5,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv0")
@@ -250,16 +252,16 @@ with tf.variable_scope("enc"):
     z_x_mean = vgg_net.fc9
     z_x_log_sigma_sq = vgg_net.fc10
 
-print("encoder_output.shape=", z_x_mean.shape)
+# print("encoder_output.shape=", z_x_mean.shape)
 b = hash_layer(z_x_mean)
-print("b.shape=", b.shape)
+# print("b.shape=", b.shape)
 gen_img = generator(b)
 last_conv_true_img, disc_true_image = discriminator(true_img_64)
 last_conv_gen_img, disc_gen_image = discriminator(gen_img,True)
 
 
 t_vars = tf.trainable_variables()
-print("t_vars=", t_vars)
+# print("t_vars=", t_vars)
 
 e_vars = [var for var in t_vars if "enc" in var.name]
 g_vars = [var for var in t_vars if "gen" in var.name]
@@ -269,14 +271,15 @@ n_l = N_losses(b,S)
 c_l = C_losses(true_img_64, gen_img,last_conv_true_img, last_conv_gen_img)
 a_l = A_losses(disc_true_image, disc_gen_image)
 
-e_loss = n_l + c_l
-g_loss = c_l + a_l
+e_loss = (n_l + c_l)
+g_loss = (c_l + a_l)
 d_loss = a_l
 
 e_optim = tf.train.AdamOptimizer(0.0001, beta1 = 0.0, beta2 = 0.9).minimize(e_loss, var_list=e_vars)
 g_optim = tf.train.AdamOptimizer(0.0001, beta1 = 0.0, beta2 = 0.9).minimize(g_loss, var_list=g_vars)
 d_optim = tf.train.AdamOptimizer(0.0001, beta1 = 0.0, beta2 = 0.9).minimize(d_loss, var_list=d_vars)
 
+# with tf.InteractiveSession() as sess:
 with tf.Session() as sess:
     init = tf.global_variables_initializer()
     sess.run(init)
@@ -285,15 +288,20 @@ with tf.Session() as sess:
     # print features.shape
 
     for e in range(epochs):
+        print("Begin epoch ", e)
         for i in range(0, len(features224), batch_size):
-
+            print("Using images ", i, " to ", i + batch_size)
             # f_64 = features[i].reshape(batch_size,w64,w64,channels)
             f_224 = features224[i:i+batch_size]
             f_64 = features64[i:i+batch_size]
             # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
-            optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
-
+            print("Begin optimizing e.")
+            e_optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
+            print("Begin optimizing g.")
             for g_step in range(1):
-                g_optimizer = sess.run(g_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
+                g_img,g_optimizer = sess.run([gen_img,g_optim],feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
+                # g_img = np.reshape(g_img,[64,64,3])
+                matplotlib.image.imsave('gen/g_img_{}_{}.png'.format(e,i),g_img[0])
+            print("Begin optimizing d.")
             for d_step in range(1):
                 d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
