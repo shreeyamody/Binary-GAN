@@ -282,11 +282,11 @@ with tf.Session() as sess:
     # print features.shape
 
     for e in range(epochs):
-        for i in range(len(features224)):
+        for i in range(0, len(features224), batch_size):
 
             # f_64 = features[i].reshape(batch_size,w64,w64,channels)
-            f_224 = features224[i]
-            f_64 = features64[i]
+            f_224 = features224[i:i+batch_size]
+            f_64 = features64[i:i+batch_size]
             # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
             optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
 
