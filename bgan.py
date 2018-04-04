@@ -249,11 +249,14 @@ with tf.variable_scope("enc"):
     vgg_net.build(true_img_224, beta_nima, train_model)
     z_x_mean = vgg_net.fc9
     z_x_log_sigma_sq = vgg_net.fc10
+
 print("encoder_output.shape=", z_x_mean.shape)
 b = hash_layer(z_x_mean)
 print("b.shape=", b.shape)
 gen_img = generator(b)
-disc_image = discriminator(gen_img)
+disc_gen_image = discriminator(gen_img)
+disc_true_image = discriminator(true_img_64)
+
 
 t_vars = tf.trainable_variables()
 print("t_vars=", t_vars)
