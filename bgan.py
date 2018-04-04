@@ -221,10 +221,10 @@ def N_losses(b,s):
     # N_loss = 0.5 * tf.reduce_sum(tf.square((1/tf.size(b) * tf.matmul(tf.transpose(b),b)) - s ))
     return N_loss
 
-def C_losses(true_img,gen_img):
+def C_losses(true_img,gen_img,last_conv_true_img,last_conv_gen_img):
     #content loss
-    last_conv_true_img,_ = discriminator(true_img, True)
-    last_conv_gen_img,_ = discriminator(gen_img, True)
+    # last_conv_true_img,_ = discriminator(true_img, True)
+    # last_conv_gen_img,_ = discriminator(gen_img, True)
 
     #check shapes
     MSE_loss = tf.reduce_mean(tf.square(true_img-gen_img))
@@ -233,10 +233,10 @@ def C_losses(true_img,gen_img):
     C_loss = MSE_loss + P_loss
     return C_loss
 
-def A_losses(true_img,gen_img):
+def A_losses(true_out,gen_out):
     #adversarial loss
-    _,true_out = discriminator(true_img,True) # save output value in C_loss
-    _,gen_out = discriminator(gen_img,True)
+    # _,true_out = discriminator(true_img,True) # save output value in C_loss
+    # _,gen_out = discriminator(gen_img,True)
     A_loss = tf.log(true_out) + tf.log(1-gen_out)
 
     return A_loss
@@ -254,8 +254,8 @@ print("encoder_output.shape=", z_x_mean.shape)
 b = hash_layer(z_x_mean)
 print("b.shape=", b.shape)
 gen_img = generator(b)
-disc_gen_image = discriminator(gen_img)
-disc_true_image = discriminator(true_img_64)
+last_conv_true_img, disc_true_image = discriminator(true_img_64)
+last_conv_gen_img, disc_gen_image = discriminator(gen_img,True)
 
 
 t_vars = tf.trainable_variables()
@@ -266,8 +266,8 @@ g_vars = [var for var in t_vars if "gen" in var.name]
 d_vars = [var for var in t_vars if "disc" in var.name]
 
 n_l = N_losses(b,S)
-c_l = C_losses(true_img_64,gen_img)
-a_l = A_losses(true_img_64,gen_img)
+c_l = C_losses(true_img_64, gen_img,last_conv_true_img, last_conv_gen_img)
+a_l = A_losses(disc_true_image, disc_gen_image)
 
 e_loss = n_l + c_l
 g_loss = c_l + a_l
@@ -293,7 +293,7 @@ with tf.Session() as sess:
             # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
             optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
 
-            for g_step in range(5):
+            for g_step in range(1):
                 g_optimizer = sess.run(g_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
             for d_step in range(1):
                 d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
