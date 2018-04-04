@@ -294,6 +294,6 @@ with tf.Session() as sess:
             optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
 
             for g_step in range(5):
-                g_optimizer = sess.run(g_optim,feed_dict = {true_img_64: f_64})
+                g_optimizer = sess.run(g_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
             for d_step in range(1):
-                d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: f_64})
+                d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
