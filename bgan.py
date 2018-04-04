@@ -192,6 +192,8 @@ def generator(inputs):#change check shape #change range of true and gen images
 
 def discriminator(inputs,reuse=False):
     # tf.Print("START `discriminator`:", inputs.shape)
+    inputs = tf.Print(inputs, [inputs], message="START `discriminator`:")
+
     with tf.variable_scope("disc", reuse=reuse) as scope:
         c0 = tf.layers.conv2d(inputs = inputs,filters=32,kernel_size=5,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv0")
