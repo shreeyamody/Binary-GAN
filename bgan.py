@@ -29,11 +29,7 @@ S = sio.loadmat('./S_K1_20_K2_30.mat')['S']  # similarity matrix
 true_img_64 = tf.placeholder(tf.float32, [batch_size, w64,h64,channels])
 true_img_224 = tf.placeholder(tf.float32, [batch_size, w224,h224,channels])
 beta_nima = tf.placeholder(tf.float32,[1])
-
-# print("X64 placeholder", tf.shape(true_img_64))
-# print("X224 placeholder", tf.shape(true_img_224))
-
-# Y = tf.placeholder(tf.float32, [batch_size, channels, w, h])
+train_model = tf.placeholder(tf.bool)
 
 def read_data():
 
@@ -46,10 +42,9 @@ def read_data():
         datadict = cPickle.load(f, encoding="latin1")
     f.close()
     features = datadict["data"]
-    # labels = datadict['labels']
     features = features.reshape(data_batch_size, channels, 32, 32).transpose(0,2,3,1).astype("uint8")
     #change resize to 64*64
-    # labels = np.array(labels)
+
     # print("while reading data - features.shape", features.shape)
     x224 = []
     x64 = []
@@ -59,7 +54,7 @@ def read_data():
        img224 = cv2.resize(img, (w224, h224)).astype(np.float32)    # i = np.random.choice(range(len(X)))
        x224.append(img224)
        img64 = cv2.resize(img, (w64, h64)).astype(np.float32)    # i = np.random.choice(range(len(X)))
-       x64.append(img64)
+       x64.append(img64/255.0) # to bring it in the range of [0,1]
     # print("len(images)=", len(images))
     # print("images[0].shape=", images[0].shape)
     # # plt.imsave('h1.png',X[i:i+1][0])
@@ -150,7 +145,10 @@ def Encoder(inputs): # change use 224 shape
 
         return t0, fc2
 
-
+def hash_layer_new(z_x_mean,z_x_log_sigma_sq):
+    eps = tf.random_normal((batch_size, 32), 0, 1) # normal dist for VAE
+    z_x = tf.add(z_x_mean,tf.multiply(tf.sqrt(tf.exp(z_x_log_sigma_sq)), eps)) # grab our actual z
+    return z_x
 def hash_layer(inputs,beta=1.0,approximation="tanh"):# dimensions
     if approximation == "tanh":
         t = tf.nn.tanh(beta*inputs)
@@ -223,6 +221,8 @@ def N_losses(b,s):
     asum = tf.square(foo - s )
     N_loss = 0.5 * tf.reduce_sum(asum)
     # N_loss = 0.5 * tf.reduce_sum(tf.square((1/tf.size(b) * tf.matmul(tf.transpose(b),b)) - s ))
+    N_loss = tf.Print(N_loss, [N_loss], message="N_loss:")
+
     return N_loss
 
 def C_losses(true_img,gen_img,last_conv_true_img,last_conv_gen_img):
@@ -235,6 +235,8 @@ def C_losses(true_img,gen_img,last_conv_true_img,last_conv_gen_img):
     P_loss = tf.reduce_mean(tf.square(last_conv_true_img - last_conv_gen_img))
 
     C_loss = MSE_loss + P_loss
+    C_loss = tf.Print(C_loss, [C_loss], message="C_loss:")
+
     return C_loss
 
 def A_losses(true_out,gen_out):
@@ -242,12 +244,12 @@ def A_losses(true_out,gen_out):
     # _,true_out = discriminator(true_img,True) # save output value in C_loss
     # _,gen_out = discriminator(gen_img,True)
     A_loss = tf.log(true_out) + tf.log(1-gen_out)
+    A_loss = tf.Print(A_loss, [A_loss], message="A_loss:")
 
     return A_loss
 
 
 # encoder_output = Encoder(true_img_224)
-train_model = tf.placeholder(tf.bool)
 with tf.variable_scope("enc"):
     vgg_net = Vgg19('./vgg19.npy', codelen=32)
     vgg_net.build(true_img_224, beta_nima, train_model)
