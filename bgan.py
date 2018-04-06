@@ -215,11 +215,9 @@ def discriminator(inputs,reuse=False):
 def N_losses(b,s):
 
     #neighborhood loss
-    mm = tf.matmul(b,b,transpose_b = True)
-    # foo = (1/tf.size(b, out_type=tf.float32) * mm)
-    foo = (1/32 * mm)
-    asum = tf.square(foo - s )
-    N_loss = 0.5 * tf.reduce_sum(asum)
+
+    N_loss = 0.5 * (tf.reduce_mean(tf.square(tf.matmul(b,b,transpose_b = True) - s )) +\
+     tf.reduce_mean(tf.square(b - tf.sign(b))))
     # N_loss = 0.5 * tf.reduce_sum(tf.square((1/tf.size(b) * tf.matmul(tf.transpose(b),b)) - s ))
     N_loss = tf.Print(N_loss, [N_loss], message="N_loss:")
 
@@ -231,23 +229,33 @@ def C_losses(true_img,gen_img,last_conv_true_img,last_conv_gen_img):
     # last_conv_gen_img,_ = discriminator(gen_img, True)
 
     #check shapes
-    MSE_loss = tf.reduce_mean(tf.square(true_img-gen_img))
+    MSE_loss = tf.reduce_mean(tf.square(true_img-gen_img)) # diff
     P_loss = tf.reduce_mean(tf.square(last_conv_true_img - last_conv_gen_img))
 
-    C_loss = MSE_loss + P_loss
+    C_loss = P_loss # + MSE_loss
     C_loss = tf.Print(C_loss, [C_loss], message="C_loss:")
 
     return C_loss
 
-def A_losses(true_out,gen_out):
+def D_losses(true_out,gen_out):
     #adversarial loss
     # _,true_out = discriminator(true_img,True) # save output value in C_loss
     # _,gen_out = discriminator(gen_img,True)
-    A_loss = tf.log(true_out) + tf.log(1-gen_out)
-    A_loss = tf.Print(A_loss, [A_loss], message="A_loss:")
+    D_loss = tf.reduce_mean(-1 * (tf.log(true_out) + tf.log(1-gen_out)))
+    D_loss = tf.Print(D_loss, [D_loss], message="D_loss:")
 
-    return A_loss
+    return D_loss
 
+
+
+def G_losses(true_out,gen_out):
+    #adversarial loss
+    # _,true_out = discriminator(true_img,True) # save output value in C_loss
+    # _,gen_out = discriminator(gen_img,True)
+    G_loss = tf.reduce_mean(-1 * tf.log(gen_out))
+    G_loss = tf.Print(G_loss, [G_loss], message="G_loss:")
+
+    return G_loss
 
 # encoder_output = Encoder(true_img_224)
 with tf.variable_scope("enc"):
@@ -273,11 +281,12 @@ d_vars = [var for var in t_vars if "disc" in var.name]
 
 n_l = N_losses(b,S)
 c_l = C_losses(true_img_64, gen_img,last_conv_true_img, last_conv_gen_img)
-a_l = A_losses(disc_true_image, disc_gen_image)
+g_l = G_losses(disc_true_image, disc_gen_image)
+d_l = D_losses(disc_true_image, disc_gen_image)
 
 e_loss = (n_l + c_l)
-g_loss = (c_l + a_l)
-d_loss = a_l
+g_loss = (c_l + g_l)
+d_loss = d_l
 
 e_optim = tf.train.AdamOptimizer(0.0001, beta1 = 0.0, beta2 = 0.9).minimize(e_loss, var_list=e_vars)
 g_optim = tf.train.AdamOptimizer(0.0001, beta1 = 0.0, beta2 = 0.9).minimize(g_loss, var_list=g_vars)
