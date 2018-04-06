@@ -1,10 +1,10 @@
 from __future__ import division, print_function
+import tensorflow as tf
 import numpy as np
 import scipy
 import scipy.io as sio
 import cv2
 from generator import Vgg19
-import tensorflow as tf
 try:
     import cPickle
 except:
@@ -23,7 +23,8 @@ h64 = 64
 w224 = 224
 h224 = 224
 channels = 3
-S = sio.loadmat('./S_K1_20_K2_30.mat')['S']  # similarity matrix
+# S = sio.loadmat('./S_K1_20_K2_30.mat')['S']  # similarity matrix
+S = np.load('S.npz')['arr_0']
 
 #placeholders
 true_img_64 = tf.placeholder(tf.float32, [batch_size, w64,h64,channels])
