@@ -172,7 +172,7 @@ def test_hash_layer():
 
 def generator(inputs):#change check shape #change range of true and gen images
     inputs = tf.Print(inputs, [inputs], message="START `generator`:")
-    with tf.variable_scope("gen", reuse=False) as scope:
+    with tf.variable_scope("gen") as scope:
         fc0 = tf.contrib.layers.fully_connected(inputs, 16384)
         fc0 = tf.reshape(fc0, [batch_size, 8, 8, 256])
         c0 = tf.layers.conv2d_transpose(inputs = fc0,filters=256,kernel_size=5,activation = tf.nn.relu, strides=(2,2), \
@@ -181,12 +181,12 @@ def generator(inputs):#change check shape #change range of true and gen images
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv1")
         c2 = tf.layers.conv2d_transpose(inputs = c1,filters=32,kernel_size=5,activation = tf.nn.relu, strides=(2,2), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv2")
-        c3 = tf.layers.conv2d_transpose(inputs = c2,filters=3,kernel_size=1,activation = tf.nn.relu, strides=(1,1), \
+        c3 = tf.layers.conv2d_transpose(inputs = c2,filters=3,kernel_size=1,activation = tf.sigmoid, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv3")
 
-        b0 = tf.layers.batch_normalization(inputs = c3,name = "b0")#change do not need?
-        r0 = tf.nn.elu(b0, name = "r0") #change or sigmoid?
-        return r0
+        # b0 = tf.layers.batch_normalization(inputs = c3,name = "b0")#change do not need?
+        # r0 = tf.nn.elu(b0, name = "r0") #change or sigmoid?
+        return c3
 
 def discriminator(inputs,reuse=False):
     # tf.Print("START `discriminator`:", inputs.shape)
@@ -202,15 +202,16 @@ def discriminator(inputs,reuse=False):
         c2 = tf.layers.conv2d(inputs = c1,filters=256,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv2")
 
-        c3 = tf.layers.conv2d(inputs = c2,filters=512,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
+        c3 = tf.layers.conv2d(inputs = c2,filters=256,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv3")
 
         c3 = tf.contrib.layers.flatten(c3)
 
-        fc0 = tf.contrib.layers.fully_connected(c3, 1024)
-        s0 = tf.nn.sigmoid(fc0, name = "s0")
+        fc0 = tf.contrib.layers.fully_connected(c3, 1024, activation_fn=tf.nn.relu)
+        fc1 = tf.contrib.layers.fully_connected(fc0, 1, activation_fn=tf.nn.sigmoid)
+        # s0 = tf.nn.sigmoid(fc0, name = "s0")
 
-        return c3,s0
+        return fc0,fc1
 
 def N_losses(b,s):
 
@@ -229,7 +230,7 @@ def C_losses(true_img,gen_img,last_conv_true_img,last_conv_gen_img):
     # last_conv_gen_img,_ = discriminator(gen_img, True)
 
     #check shapes
-    MSE_loss = tf.reduce_mean(tf.square(true_img-gen_img)) # diff
+    #MSE_loss = tf.reduce_mean(tf.square(true_img-gen_img)) # diff
     P_loss = tf.reduce_mean(tf.square(last_conv_true_img - last_conv_gen_img))
 
     C_loss = P_loss # + MSE_loss
