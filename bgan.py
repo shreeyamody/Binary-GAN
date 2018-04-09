@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 #parameters
 data_batch_size = 10000
 batch_size = 1
-epochs = 1
+epochs = 50
 lr = 0.0001
 w64 = 64
 h64 = 64
@@ -150,6 +150,7 @@ def hash_layer_new(z_x_mean,z_x_log_sigma_sq):
     eps = tf.random_normal((batch_size, 32), 0, 1) # normal dist for VAE
     z_x = tf.add(z_x_mean,tf.multiply(tf.sqrt(tf.exp(z_x_log_sigma_sq)), eps)) # grab our actual z
     return z_x
+
 def hash_layer(inputs,beta=1.0,approximation="tanh"):# dimensions
     if approximation == "tanh":
         t = tf.nn.tanh(beta*inputs)
@@ -171,9 +172,9 @@ def test_hash_layer():
 
 # test_hash_layer()
 
-def generator(inputs):#change check shape #change range of true and gen images
+def generator(inputs,reuse=False):#change check shape #change range of true and gen images
     inputs = tf.Print(inputs, [inputs], message="START `generator`:")
-    with tf.variable_scope("gen") as scope:
+    with tf.variable_scope("gen",reuse=reuse) as scope:
         fc0 = tf.contrib.layers.fully_connected(inputs, 16384)
         fc0 = tf.reshape(fc0, [batch_size, 8, 8, 256])
         c0 = tf.layers.conv2d_transpose(inputs = fc0,filters=256,kernel_size=5,activation = tf.nn.relu, strides=(2,2), \
@@ -260,6 +261,7 @@ def G_losses(true_out,gen_out):
     return G_loss
 
 # encoder_output = Encoder(true_img_224)
+rand_z = tf.random_normal((batch_size, 32), 0, 1)
 with tf.variable_scope("enc"):
     vgg_net = Vgg19('./vgg19.npy', codelen=32)
     vgg_net.build(true_img_224, beta_nima, train_model)
@@ -267,12 +269,16 @@ with tf.variable_scope("enc"):
     z_x_log_sigma_sq = vgg_net.fc10
 
 # print("encoder_output.shape=", z_x_mean.shape)
-b = hash_layer(z_x_mean)
+b = hash_layer_new(z_x_mean,z_x_log_sigma_sq)
 # print("b.shape=", b.shape)
-gen_img = generator(b)
-last_conv_true_img, disc_true_image = discriminator(true_img_64)
-last_conv_gen_img, disc_gen_image = discriminator(gen_img,True)
+with tf.variable_scope("gen") as scope:
+    gen_img = generator(b)
+    rand_gen_img = generator(rand_z,True)
 
+with tf.variable_scope("disc") as scope:
+    last_conv_gen_img, disc_gen_image = discriminator(gen_img)
+    last_conv_true_img, disc_true_image = discriminator(true_img_64,True)
+    last_conv_rand_gen_img, disc_rand_gen_img = discriminator(rand_gen_img,True)
 
 t_vars = tf.trainable_variables()
 # print("t_vars=", t_vars)
@@ -304,7 +310,7 @@ with tf.Session() as sess:
 
     for e in range(epochs):
         print("Begin epoch ", e)
-        for i in range(0, len(features224), batch_size):
+        for i in range(0, len(features224), batch_size+1):
             print("Using images ", i, " to ", i + batch_size)
             # f_64 = features[i].reshape(batch_size,w64,w64,channels)
             f_224 = features224[i:i+batch_size]
