@@ -224,7 +224,7 @@ def N_losses(b,s):
     # N_loss = 0.5 * tf.reduce_sum(tf.square((1/tf.size(b) * tf.matmul(tf.transpose(b),b)) - s ))
     N_loss = tf.Print(N_loss, [N_loss], message="N_loss:")
 
-    return N_loss
+    return 10*N_loss
 
 def C_losses(true_img,gen_img,last_conv_true_img,last_conv_gen_img):
     #content loss
