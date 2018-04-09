@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 #parameters
 data_batch_size = 10000
-batch_size = 1
+batch_size = 5
 epochs = 50
 lr = 0.0001
 w64 = 64
@@ -65,36 +65,36 @@ def read_data():
 def Encoder(inputs): # change use 224 shape
     with tf.variable_scope("enc", reuse=False) as scope:
 
-        c0 = tf.layers.conv2d(inputs = inputs,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c0 = tf.layers.conv2d(inputs = inputs,filters=64,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv0")
 
-        c1 = tf.layers.conv2d(inputs = c0,filters=64,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c1 = tf.layers.conv2d(inputs = c0,filters=64,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv1")
 
         mp0 = tf.layers.max_pooling2d(inputs = c1,pool_size = 2,strides = 2,  padding='same',name="mp0")
 
 
 
-        c2 = tf.layers.conv2d(inputs = mp0,filters=128,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c2 = tf.layers.conv2d(inputs = mp0,filters=128,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv2")
 
-        c3 = tf.layers.conv2d(inputs = c2,filters=128,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c3 = tf.layers.conv2d(inputs = c2,filters=128,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv3")
 
         mp1 = tf.layers.max_pooling2d(inputs = c3,pool_size = 2,strides = 2,  padding='same',name="mp1")
 
 
 
-        c4 = tf.layers.conv2d(inputs = mp1,filters=256,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c4 = tf.layers.conv2d(inputs = mp1,filters=256,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv4")
 
-        c5 = tf.layers.conv2d(inputs = c4,filters=256,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c5 = tf.layers.conv2d(inputs = c4,filters=256,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv5")
 
-        c6 = tf.layers.conv2d(inputs = c5,filters=256,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c6 = tf.layers.conv2d(inputs = c5,filters=256,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv6")
 
-        c6 = tf.layers.conv2d(inputs = c6,filters=256,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c6 = tf.layers.conv2d(inputs = c6,filters=256,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv6_extra")
 
         # change add conv layer
@@ -103,16 +103,16 @@ def Encoder(inputs): # change use 224 shape
 
 
 
-        c7 = tf.layers.conv2d(inputs = mp2,filters=512,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c7 = tf.layers.conv2d(inputs = mp2,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv7")
 
-        c8 = tf.layers.conv2d(inputs = c7,filters=512,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c8 = tf.layers.conv2d(inputs = c7,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv8")
 
-        c9 = tf.layers.conv2d(inputs = c8,filters=512,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c9 = tf.layers.conv2d(inputs = c8,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv9")
 
-        c9 = tf.layers.conv2d(inputs = c9,filters=512,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c9 = tf.layers.conv2d(inputs = c9,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv9_extra")
 
         #conv layer
@@ -120,24 +120,24 @@ def Encoder(inputs): # change use 224 shape
 
 
 
-        c10 = tf.layers.conv2d(inputs = mp3,filters=512,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c10 = tf.layers.conv2d(inputs = mp3,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv10")
 
-        c11 = tf.layers.conv2d(inputs = c10,filters=512,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c11 = tf.layers.conv2d(inputs = c10,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv11")
 
-        c12 = tf.layers.conv2d(inputs = c11,filters=512,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c12 = tf.layers.conv2d(inputs = c11,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv12")
 
-        c12 = tf.layers.conv2d(inputs = c12,filters=512,kernel_size=3,activation = tf.nn.relu, strides=(1,1), \
+        c12 = tf.layers.conv2d(inputs = c12,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv12_extra")
 
         #conv layer
         mp4 = tf.layers.max_pooling2d(inputs = c12,pool_size = 2,strides = 2,  padding='same',name="mp4")
 
 
-        fc0 = tf.contrib.layers.fully_connected(mp4, 4096,activation_fn=tf.nn.relu)
-        fc1 = tf.contrib.layers.fully_connected(fc0, 4096,activation_fn=tf.nn.relu)
+        fc0 = tf.contrib.layers.fully_connected(mp4, 4096,activation_fn=tf.nn.elu)
+        fc1 = tf.contrib.layers.fully_connected(fc0, 4096,activation_fn=tf.nn.elu)
         fc2 = tf.contrib.layers.fully_connected(fc1, 32)
         t0 = tf.nn.tanh(fc2)
 
@@ -177,11 +177,11 @@ def generator(inputs,reuse=False):#change check shape #change range of true and 
     with tf.variable_scope("gen",reuse=reuse) as scope:
         fc0 = tf.contrib.layers.fully_connected(inputs, 16384)
         fc0 = tf.reshape(fc0, [batch_size, 8, 8, 256])
-        c0 = tf.layers.conv2d_transpose(inputs = fc0,filters=256,kernel_size=5,activation = tf.nn.relu, strides=(2,2), \
+        c0 = tf.layers.conv2d_transpose(inputs = fc0,filters=256,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv0")
-        c1 = tf.layers.conv2d_transpose(inputs = c0,filters=128,kernel_size=5,activation = tf.nn.relu, strides=(2,2), \
+        c1 = tf.layers.conv2d_transpose(inputs = c0,filters=128,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv1")
-        c2 = tf.layers.conv2d_transpose(inputs = c1,filters=32,kernel_size=5,activation = tf.nn.relu, strides=(2,2), \
+        c2 = tf.layers.conv2d_transpose(inputs = c1,filters=32,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv2")
         c3 = tf.layers.conv2d_transpose(inputs = c2,filters=3,kernel_size=1,activation = tf.sigmoid, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv3")
@@ -209,7 +209,7 @@ def discriminator(inputs,reuse=False):
 
         c3 = tf.contrib.layers.flatten(c3)
 
-        fc0 = tf.contrib.layers.fully_connected(c3, 1024, activation_fn=tf.nn.relu)
+        fc0 = tf.contrib.layers.fully_connected(c3, 1024, activation_fn=tf.nn.elu)
         fc1 = tf.contrib.layers.fully_connected(fc0, 1, activation_fn=tf.nn.sigmoid)
         # s0 = tf.nn.sigmoid(fc0, name = "s0")
 
@@ -322,7 +322,7 @@ with tf.Session() as sess:
             for g_step in range(1):
                 g_img,g_optimizer = sess.run([gen_img,g_optim],feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
                 # g_img = np.reshape(g_img,[64,64,3])
-                matplotlib.image.imsave('gen/g_img_{}_{}.png'.format(e,i),g_img[0])
+                matplotlib.image.imsave('gen3/g_img_{}_{}.png'.format(e,i),g_img[0])
             print("Begin optimizing d.")
             for d_step in range(1):
                 d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
