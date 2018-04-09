@@ -233,29 +233,29 @@ def C_losses(true_img,gen_img,last_conv_true_img,last_conv_gen_img):
 
     #check shapes
     #MSE_loss = tf.reduce_mean(tf.square(true_img-gen_img)) # diff
-    P_loss = tf.reduce_mean(tf.square(last_conv_true_img - last_conv_gen_img))
+    P_loss = tf.reduce_sum(tf.square(last_conv_true_img - last_conv_gen_img))/64.0/64.0/3.0
 
     C_loss = P_loss # + MSE_loss
     C_loss = tf.Print(C_loss, [C_loss], message="C_loss:")
 
     return C_loss
 
-def D_losses(true_out,gen_out):
+def D_losses(disc_true_image,disc_rand_gen_img):
     #adversarial loss
     # _,true_out = discriminator(true_img,True) # save output value in C_loss
     # _,gen_out = discriminator(gen_img,True)
-    D_loss = tf.reduce_mean(-1 * (tf.log(true_out) + tf.log(1-gen_out)))
+    D_loss = tf.reduce_mean(-1. * (tf.log(tf.clip_by_value(disc_true_image,1e-5,1.0)) + tf.log(tf.clip_by_value(1-disc_rand_gen_img,1e-5,1.0))))
     D_loss = tf.Print(D_loss, [D_loss], message="D_loss:")
 
     return D_loss
 
 
 
-def G_losses(true_out,gen_out):
+def G_losses(disc_rand_gen_img):
     #adversarial loss
     # _,true_out = discriminator(true_img,True) # save output value in C_loss
     # _,gen_out = discriminator(gen_img,True)
-    G_loss = tf.reduce_mean(-1 * tf.log(gen_out))
+    G_loss = tf.reduce_mean(-1. * tf.log(tf.clip_by_value(disc_rand_gen_img,1e-5,1.0)))
     G_loss = tf.Print(G_loss, [G_loss], message="G_loss:")
 
     return G_loss
@@ -289,8 +289,8 @@ d_vars = [var for var in t_vars if "disc" in var.name]
 
 n_l = N_losses(b,S)
 c_l = C_losses(true_img_64, gen_img,last_conv_true_img, last_conv_gen_img)
-g_l = G_losses(disc_true_image, disc_gen_image)
-d_l = D_losses(disc_true_image, disc_gen_image)
+g_l = G_losses(disc_rand_gen_img)
+d_l = D_losses(disc_true_image, disc_rand_gen_img)
 
 e_loss = (n_l + c_l)
 g_loss = (c_l + g_l)
