@@ -331,45 +331,43 @@ with tf.Session() as sess:
     next_batches224 = None # remove
     next_batches64 = None
     # print features.shape
-    if False:
-        for e in range(epochs):
-            print("Begin epoch ", e)
-            iter_ = data_iterator(features224)
-            for i in range(total_batch):
-                next_batches224 ,indx3= iter_.next()
-                next_batches64 = features64[indx3]
-                ss = S[indx3,:][:,indx3]
-                print("Using images ", i, " to ", i + batch_size)
-                # f_64 = features[i].reshape(batch_size,w64,w64,channels)
-                # f_224 = features224[i:i+batch_size]
-                # f_64 = features64[i:i+batch_size]
-                # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
-                # print("Begin optimizing e.")
-                e_optimizer = sess.run(e_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
+
+    for e in range(epochs):
+        print("Begin epoch ", e)
+        iter_ = data_iterator(features224)
+        for i in range(total_batch):
+            next_batches224 ,indx3= iter_.next()
+            next_batches64 = features64[indx3]
+            ss = S[indx3,:][:,indx3]
+            print("Using images ", i, " to ", i + batch_size)
+            # f_64 = features[i].reshape(batch_size,w64,w64,channels)
+            # f_224 = features224[i:i+batch_size]
+            # f_64 = features64[i:i+batch_size]
+            # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
+            # print("Begin optimizing e.")
+            e_optimizer = sess.run(e_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
+            train_model: True, s:ss})
+            # print("Begin optimizing g.")
+            for g_step in range(1):
+                g_img,g_optimizer = sess.run([gen_img,g_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224,\
+                 beta_nima:[-2], train_model: True, s:ss})
+                # g_img = np.reshape(g_img,[64,64,3])
+                matplotlib.image.imsave('gen4/g_img_{}_{}.png'.format(e,i),g_img[0])
+            # print("Begin optimizing d.")
+            for d_step in range(1):
+                d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
                 train_model: True, s:ss})
-                # print("Begin optimizing g.")
-                for g_step in range(1):
-                    g_img,g_optimizer = sess.run([gen_img,g_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224,\
-                     beta_nima:[-2], train_model: True, s:ss})
-                    # g_img = np.reshape(g_img,[64,64,3])
-                    matplotlib.image.imsave('gen4/g_img_{}_{}.png'.format(e,i),g_img[0])
-                # print("Begin optimizing d.")
-                for d_step in range(1):
-                    d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
-                    train_model: True, s:ss})
 
 
-        save_path = saver.save(sess, "model.ckpt")
+    save_path = saver.save(sess, "model.ckpt")
 
 # test images
-    else:
-        print "restoring values"
-        restore = saver.restore(sess, "model.ckpt")
-        # restore_vars = chkp.print_tensors_in_checkpoint_file("model.ckpt", tensor_name='', all_tensors=True)
+    restore = saver.restore(sess, "model.ckpt")
+    # restore_vars = chkp.print_tensors_in_checkpoint_file("model.ckpt", tensor_name='', all_tensors=True)
 
 
-        g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: next_batches64,true_img_224: next_batches224,beta_nima:[-2],\
-         train_model: False, s:ss}) #change to test images!!!!!!!!!!
-        for k in range(batch_size):
-            matplotlib.image.imsave('gen5/test_gen_img.png',g[k])
-            matplotlib.image.imsave('gen5/test_rand_gen_img.png',rg[k])
+    g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: next_batches64,true_img_224: next_batches224,beta_nima:[-2],\
+     train_model: False, s:ss}) #change to test images!!!!!!!!!!
+    for k in range(batch_size):
+        matplotlib.image.imsave('gen5/test_gen_img.png',g[k])
+        matplotlib.image.imsave('gen5/test_rand_gen_img.png',rg[k])
