@@ -359,11 +359,27 @@ with tf.Session() as sess:
 
         save_path = saver.save(sess, "model.ckpt")
     else:
-    # test images
+        # test images
+        test_dataset = sio.loadmat('cifar-10.mat')['test_data']  #cifar-10 data
+        test_images224 = []
+        test_images64 = []
+        for i in range(len(test_dataset)):
+            t = test_dataset[:, :, :, i]
+            image224 = scipy.misc.imresize(t, [224, 224])
+            image64 = scipy.misc.imresize(t, [64, 64])
+            test_images224.append(image224)
+            test_images64.append(image64)
+        test_images224 = np.array(test_images224)
+        test_images64 = np.array(test_images64)
         restore = saver.restore(sess, "model.ckpt")
         # restore_vars = chkp.print_tensors_in_checkpoint_file("model.ckpt", tensor_name='', all_tensors=True)
-        g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: test_batches64,true_img_224: test_batches224,beta_nima:[-2],\
-         train_model: False}) #change to test images!!!!!!!!!!
-        for k in range(batch_size):
-            matplotlib.image.imsave('gen5/test_gen_img_{}.png'.format(k),g[k])
-            matplotlib.image.imsave('gen5/test_rand_gen_img.png'.format(k),rg[k])
+        test_iter = data_iterator(test_images224)
+        test_total_batch = int(np.floor(len(test_images224) / batch_size))
+        for i in range(test_total_batch):
+            test_next_batches224, idx4 = test_iter.next()
+            test_next_batches64 = test_images64[idx4]
+            g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: test_next_batches64,true_img_224: test_next_batches224,beta_nima:[-2],\
+             train_model: False}) #change to test images!!!!!!!!!!
+            for k in range(batch_size):
+                matplotlib.image.imsave('gen5/test_gen_img_{}.png'.format(k),g[k])
+                matplotlib.image.imsave('gen5/test_rand_gen_img.png'.format(k),rg[k])
