@@ -44,7 +44,7 @@ class Vgg19:
             green - VGG_MEAN[1],
             red - VGG_MEAN[2],
         ],3)
-        bgr = tf.Print(bgr, [bgr], message="START `encoder`:")
+        # bgr = tf.Print(bgr, [bgr], message="START `encoder`:")
 
         self.conv1_1 = self.conv_layer(bgr, 3, 64, "conv1_1")
         self.conv1_2 = self.conv_layer(self.conv1_1, 64, 64, "conv1_2")
