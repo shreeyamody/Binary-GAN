@@ -25,8 +25,8 @@ w224 = 224
 h224 = 224
 channels = 3
 # S = sio.loadmat('./S_K1_20_K2_30.mat')['S']  # similarity matrix
-# S = np.load('S.npz')['arr_0']#cifar-10
-S = np.load('S_20_30_celeba_KNN_1_4.npz')['arr_0']
+S = np.load('S.npz')['arr_0']#cifar-10
+# S = np.load('S_20_30_celeba_KNN_1_4.npz')['arr_0']
 
 #placeholders
 true_img_64 = tf.placeholder(tf.float32, [batch_size, w64,h64,channels])
@@ -49,8 +49,8 @@ def data_iterator(img224):
 
 def read_data():
 
-    # f = open('datasets/cifar-10-batches-py/data_batch_1', 'rb') #cifar-10
-    f = open('datasets/img_align_celeba','rb')
+    f = open('datasets/cifar-10-batches-py/data_batch_1', 'rb') #cifar-10
+    # f = open('datasets/img_align_celeba','rb')
     try:
         datadict = cPickle.load(f)
     except:
