@@ -329,6 +329,7 @@ with tf.Session() as sess:
     num_examples = len(features64)
     total_batch = int(np.floor(num_examples / batch_size ))
     next_batches224 = None # remove
+    next_batches64 = None
     # print features.shape
 
     for e in range(epochs):
@@ -365,7 +366,8 @@ with tf.Session() as sess:
     restore_vars = chkp.print_tensors_in_checkpoint_file("model.ckpt", tensor_name='', all_tensors=True)
 
 
-    g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_224: next_batches224}) #change to test images!!!!!!!!!!
+    g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: next_batches64,true_img_224: next_batches224,beta_nima:[-2],\
+     train_model: False, s:ss}) #change to test images!!!!!!!!!!
     for k in range(batch_size):
-        matplotlib.image.imsave('gen5/test_gen_img.png'),g[k])
-        matplotlib.image.imsave('gen5/test_rand_gen_img.png'),rg[k])
+        matplotlib.image.imsave('gen5/test_gen_img.png',g[k])
+        matplotlib.image.imsave('gen5/test_rand_gen_img.png',rg[k])
