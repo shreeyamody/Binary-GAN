@@ -31,6 +31,19 @@ true_img_64 = tf.placeholder(tf.float32, [batch_size, w64,h64,channels])
 true_img_224 = tf.placeholder(tf.float32, [batch_size, w224,h224,channels])
 beta_nima = tf.placeholder(tf.float32,[1])
 train_model = tf.placeholder(tf.bool)
+s = tf.placeholder(tf.float32, [batch_size, batch_size])
+
+def data_iterator(img224):
+    while True:
+        idxs = np.arange(0, len(img224))
+        np.random.shuffle(idxs)
+        for batch_idx in range(0, len(img224), batch_size):
+            cur_idxs = idxs[batch_idx:batch_idx + batch_size]
+            images_batch = img224[cur_idxs]
+            if len(images_batch) < batch_size:
+                break
+            images_batch = images_batch.astype("float32")
+            yield images_batch ,cur_idxs
 
 def read_data():
 
@@ -287,6 +300,7 @@ e_vars = [var for var in t_vars if "enc" in var.name]
 g_vars = [var for var in t_vars if "gen" in var.name]
 d_vars = [var for var in t_vars if "disc" in var.name]
 
+S = S[]
 n_l = N_losses(b,S)
 c_l = C_losses(true_img_64, gen_img,last_conv_true_img, last_conv_gen_img)
 g_l = G_losses(disc_rand_gen_img)
@@ -306,23 +320,35 @@ with tf.Session() as sess:
     sess.run(init)
 
     features224, features64 = read_data()
+    features224=np.array(features224)
+    features64=np.array(features64)
+    num_examples = len(img64)
+    total_batch = int(np.floor(num_examples / batch_size ))
+
     # print features.shape
 
     for e in range(epochs):
         print("Begin epoch ", e)
-        for i in range(0, len(features224), batch_size+1):
+        iter_ = data_iterator(features224)
+        for i in range(total_batch):
+            next_batches224 ,indx3= iter_.next()
+            next_batches64 = features64[indx3]
+            ss = S[indx3,:][:,indx3]
             print("Using images ", i, " to ", i + batch_size)
             # f_64 = features[i].reshape(batch_size,w64,w64,channels)
-            f_224 = features224[i:i+batch_size]
-            f_64 = features64[i:i+batch_size]
+            # f_224 = features224[i:i+batch_size]
+            # f_64 = features64[i:i+batch_size]
             # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
             print("Begin optimizing e.")
-            e_optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
+            e_optimizer = sess.run(e_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
+            train_model: True, s:ss})
             print("Begin optimizing g.")
             for g_step in range(1):
-                g_img,g_optimizer = sess.run([gen_img,g_optim],feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
+                g_img,g_optimizer = sess.run([gen_img,g_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224,\
+                 beta_nima:[-2], train_model: True, s:ss})
                 # g_img = np.reshape(g_img,[64,64,3])
                 matplotlib.image.imsave('gen3/g_img_{}_{}.png'.format(e,i),g_img[0])
             print("Begin optimizing d.")
             for d_step in range(1):
-                d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: f_64, true_img_224: f_224, beta_nima:[-2], train_model: True})
+                d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
+                train_model: True, s:ss})
