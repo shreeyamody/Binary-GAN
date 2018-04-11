@@ -328,7 +328,7 @@ with tf.Session() as sess:
     features64=np.array(features64)
     num_examples = len(features64)
     total_batch = int(np.floor(num_examples / batch_size ))
-
+    next_batches224 = None # remove
     # print features.shape
 
     for e in range(epochs):
@@ -351,7 +351,7 @@ with tf.Session() as sess:
                 g_img,g_optimizer = sess.run([gen_img,g_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224,\
                  beta_nima:[-2], train_model: True, s:ss})
                 # g_img = np.reshape(g_img,[64,64,3])
-                matplotlib.image.imsave('gen3/g_img_{}_{}.png'.format(e,i),g_img[0])
+                matplotlib.image.imsave('gen4/g_img_{}_{}.png'.format(e,i),g_img[0])
             print("Begin optimizing d.")
             for d_step in range(1):
                 d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
@@ -364,4 +364,8 @@ with tf.Session() as sess:
     restore = saver.restore(sess, "model.ckpt")
     restore_vars = chkp.print_tensors_in_checkpoint_file("model.ckpt", tensor_name='', all_tensors=True)
 
-    # sess.run()
+
+    g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_224: next_batches224}) #change to test images!!!!!!!!!!
+    for k in range(batch_size):
+        matplotlib.image.imsave('gen5/test_gen_img.png'),g[k])
+        matplotlib.image.imsave('gen5/test_rand_gen_img.png'),rg[k])
