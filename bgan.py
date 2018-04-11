@@ -1,5 +1,6 @@
 from __future__ import division, print_function
 import tensorflow as tf
+from tensorflow.python.tools import inspect_checkpoint as chkp
 import numpy as np
 import scipy
 import scipy.io as sio
@@ -15,16 +16,17 @@ import matplotlib.pyplot as plt
 
 #parameters
 data_batch_size = 10000
-batch_size = 5
-epochs = 50
-lr = 0.0001
+batch_size = 40
+epochs = 1
+lr = 0.001
 w64 = 64
 h64 = 64
 w224 = 224
 h224 = 224
 channels = 3
 # S = sio.loadmat('./S_K1_20_K2_30.mat')['S']  # similarity matrix
-S = np.load('S.npz')['arr_0']
+# S = np.load('S.npz')['arr_0']#cifar-10
+S = np.load('S_20_30_celeba_KNN_1_4.npz')['arr_0']
 
 #placeholders
 true_img_64 = tf.placeholder(tf.float32, [batch_size, w64,h64,channels])
@@ -47,7 +49,8 @@ def data_iterator(img224):
 
 def read_data():
 
-    f = open('datasets/cifar-10-batches-py/data_batch_1', 'rb')
+    # f = open('datasets/cifar-10-batches-py/data_batch_1', 'rb') #cifar-10
+    f = open('datasets/img_align_celeba','rb')
     try:
         datadict = cPickle.load(f)
     except:
@@ -313,6 +316,8 @@ e_optim = tf.train.AdamOptimizer(0.0001, beta1 = 0.0, beta2 = 0.9).minimize(e_lo
 g_optim = tf.train.AdamOptimizer(0.0001, beta1 = 0.0, beta2 = 0.9).minimize(g_loss, var_list=g_vars)
 d_optim = tf.train.AdamOptimizer(0.0001, beta1 = 0.0, beta2 = 0.9).minimize(d_loss, var_list=d_vars)
 
+saver = tf.train.Saver()
+
 # with tf.InteractiveSession() as sess:
 with tf.Session() as sess:
     init = tf.global_variables_initializer()
@@ -321,7 +326,7 @@ with tf.Session() as sess:
     features224, features64 = read_data()
     features224=np.array(features224)
     features64=np.array(features64)
-    num_examples = len(img64)
+    num_examples = len(features64)
     total_batch = int(np.floor(num_examples / batch_size ))
 
     # print features.shape
@@ -351,3 +356,12 @@ with tf.Session() as sess:
             for d_step in range(1):
                 d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
                 train_model: True, s:ss})
+
+
+    save_path = saver.save(sess, "model.ckpt")
+
+# test images
+    restore = saver.restore(sess, "model.ckpt")
+    restore_vars = chkp.print_tensors_in_checkpoint_file("model.ckpt", tensor_name='', all_tensors=True)
+
+    # sess.run()
