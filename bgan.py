@@ -300,8 +300,7 @@ e_vars = [var for var in t_vars if "enc" in var.name]
 g_vars = [var for var in t_vars if "gen" in var.name]
 d_vars = [var for var in t_vars if "disc" in var.name]
 
-S = S[]
-n_l = N_losses(b,S)
+n_l = N_losses(b,s)
 c_l = C_losses(true_img_64, gen_img,last_conv_true_img, last_conv_gen_img)
 g_l = G_losses(disc_rand_gen_img)
 d_l = D_losses(disc_true_image, disc_rand_gen_img)
