@@ -365,5 +365,6 @@ with tf.Session() as sess:
         g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: test_batches64,true_img_224: test_batches224,beta_nima:[-2],\
          train_model: False}) #change to test images!!!!!!!!!!
         for k in range(batch_size):
+            matplotlib.image.imsave('gen5/true_img_{}.png'.format(k),test_batches64[k])
             matplotlib.image.imsave('gen5/test_gen_img_{}.png'.format(k),g[k])
             matplotlib.image.imsave('gen5/test_rand_gen_img.png'.format(k),rg[k])
