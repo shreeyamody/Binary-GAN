@@ -378,6 +378,12 @@ with tf.Session() as sess:
         for i in range(test_total_batch):
             test_next_batches224, idx4 = test_iter.next()
             test_next_batches64 = test_images64[idx4]
+
+            true_img_64 = graph.get_tensor_by_name("true_img_64:0")
+            true_img_224 = graph.get_tensor_by_name("true_img_224:0")
+            beta_nima = graph.get_tensor_by_name("beta_nima:0")
+            train_model = graph.get_tensor_by_name("train_model:0")
+
             g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: test_next_batches64,true_img_224: test_next_batches224,beta_nima:[-2],\
              train_model: False}) #change to test images!!!!!!!!!!
             for k in range(batch_size):
