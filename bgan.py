@@ -372,10 +372,11 @@ with tf.Session() as sess:
     else:
     # test images
         dataset = sio.loadmat('cifar-10.mat')  #cifar-10 data
+        a = dataset['data_set']
         test_dataset = dataset['test_data']
         test_images224 = []
         test_images64 = []
-        print ("starting test",len(dataset),len(test_dataset))
+        print ("starting test",len(a),len(test_dataset))
         for i in range(len(test_dataset)):
             print ("starting test",i)
 
@@ -400,7 +401,7 @@ with tf.Session() as sess:
 
         # test_next_batches224, idx4 = test_iter.next()
         # test_next_batches64 = test_images64[idx4]
-        print("test sizes",len(test_next_batches64),len(test_next_batches224))
+        # print("test sizes",len(test_next_batches64),len(test_next_batches224))
 
         # true_img_64 = graph.get_tensor_by_name("true_img_64:0")
         # true_img_224 = graph.get_tensor_by_name("true_img_224:0")
