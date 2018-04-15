@@ -371,10 +371,11 @@ with tf.Session() as sess:
         save_path = saver.save(sess, "model.ckpt")
     else:
     # test images
-        test_dataset = sio.loadmat('cifar-10.mat')['test_data']  #cifar-10 data
+        dataset = sio.loadmat('cifar-10.mat')  #cifar-10 data
+        test_dataset = dataset['test_data']
         test_images224 = []
         test_images64 = []
-        print ("starting test")
+        print ("starting test",len(dataset),len(test_dataset))
         for i in range(len(test_dataset)):
             print ("starting test",i)
 
@@ -389,7 +390,7 @@ with tf.Session() as sess:
         test_images64 = np.array(test_images64)
         print ("restoring")
 
-        restore = saver.restore(sess, "model.ckpt")
+        # restore = saver.restore(sess, "model.ckpt")
         # restore_vars = chkp.print_tensors_in_checkpoint_file("model.ckpt", tensor_name='', all_tensors=True)
         test_iter = data_iterator(test_images224)
         test_total_batch = int(np.floor(len(test_images224)))
@@ -397,8 +398,8 @@ with tf.Session() as sess:
         # for i in range(test_total_batch):
         #     print ("test_total_batch",i)
 
-        test_next_batches224, idx4 = test_iter.next()
-        test_next_batches64 = test_images64[idx4]
+        # test_next_batches224, idx4 = test_iter.next()
+        # test_next_batches64 = test_images64[idx4]
         print("test sizes",len(test_next_batches64),len(test_next_batches224))
 
         # true_img_64 = graph.get_tensor_by_name("true_img_64:0")
