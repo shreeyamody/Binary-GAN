@@ -329,64 +329,65 @@ with tf.Session() as sess:
     num_examples = len(features64)
     total_batch = int(np.floor(num_examples / batch_size ))
 
-    if False:
-        for e in range(epochs):
-            print("Begin epoch ", e)
-            iter_ = data_iterator(features224)
-            for i in range(total_batch):
-                next_batches224 ,indx3= iter_.next()
-                next_batches64 = features64[indx3]
-                ss = S[indx3,:][:,indx3]
-                print("Using images ", i, " to ", i + batch_size)
-                # f_64 = features[i].reshape(batch_size,w64,w64,channels)
-                # f_224 = features224[i:i+batch_size]
-                # f_64 = features64[i:i+batch_size]
-                # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
-                # print("Begin optimizing e.")
-                e_optimizer = sess.run(e_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
+    # if False:
+    for e in range(epochs):
+        print("Begin epoch ", e)
+        iter_ = data_iterator(features224)
+        for i in range(total_batch):
+            next_batches224 ,indx3= iter_.next()
+            next_batches64 = features64[indx3]
+            ss = S[indx3,:][:,indx3]
+            print("Using images ", i, " to ", i + batch_size)
+            # f_64 = features[i].reshape(batch_size,w64,w64,channels)
+            # f_224 = features224[i:i+batch_size]
+            # f_64 = features64[i:i+batch_size]
+            # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
+            # print("Begin optimizing e.")
+            e_optimizer = sess.run(e_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
+            train_model: True, s:ss})
+            # print("Begin optimizing g.")
+            for g_step in range(1):
+                g_img,g_optimizer = sess.run([gen_img,g_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224,\
+                 beta_nima:[-2], train_model: True, s:ss})
+                # g_img = np.reshape(g_img,[64,64,3])
+                for t in range(batch_size):
+                    matplotlib.image.imsave('gen6/g_img_{}_{}_{}t.png'.format(e,i,t),g_img[t])
+            # print("Begin optimizing d.")
+            for d_step in range(1):
+                d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
                 train_model: True, s:ss})
-                # print("Begin optimizing g.")
-                for g_step in range(1):
-                    g_img,g_optimizer = sess.run([gen_img,g_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224,\
-                     beta_nima:[-2], train_model: True, s:ss})
-                    # g_img = np.reshape(g_img,[64,64,3])
-                    matplotlib.image.imsave('gen4/g_img_{}_{}.png'.format(e,i),g_img[0])
-                # print("Begin optimizing d.")
-                for d_step in range(1):
-                    d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
-                    train_model: True, s:ss})
 
 
-        save_path = saver.save(sess, "model.ckpt")
-    else:
-        # test images
-        test_dataset = sio.loadmat('cifar-10.mat')['test_data']  #cifar-10 data
-        test_images224 = []
-        test_images64 = []
-        for i in range(len(test_dataset)):
-            t = test_dataset[:, :, :, i]
-            image224 = scipy.misc.imresize(t, [224, 224])
-            image64 = scipy.misc.imresize(t, [64, 64])
-            test_images224.append(image224)
-            test_images64.append(image64)
-        test_images224 = np.array(test_images224)
-        test_images64 = np.array(test_images64)
-        restore = saver.restore(sess, "model.ckpt")
-        # restore_vars = chkp.print_tensors_in_checkpoint_file("model.ckpt", tensor_name='', all_tensors=True)
-        test_iter = data_iterator(test_images224)
-        test_total_batch = int(np.floor(len(test_images224) / batch_size))
-        for i in range(test_total_batch):
-            test_next_batches224, idx4 = test_iter.next()
-            test_next_batches64 = test_images64[idx4]
+    save_path = saver.save(sess, "model.ckpt")
+    # else:
+    # test images
+    test_dataset = sio.loadmat('cifar-10.mat')['test_data']  #cifar-10 data
+    test_images224 = []
+    test_images64 = []
+    for i in range(len(test_dataset)):
+        t = test_dataset[:, :, :, i]
+        image224 = scipy.misc.imresize(t, [224, 224])
+        image64 = scipy.misc.imresize(t, [64, 64])
+        test_images224.append(image224)
+        test_images64.append(image64)
+    test_images224 = np.array(test_images224)
+    test_images64 = np.array(test_images64)
+    restore = saver.restore(sess, "model.ckpt")
+    # restore_vars = chkp.print_tensors_in_checkpoint_file("model.ckpt", tensor_name='', all_tensors=True)
+    test_iter = data_iterator(test_images224)
+    test_total_batch = int(np.floor(len(test_images224) / batch_size))
+    for i in range(test_total_batch):
+        test_next_batches224, idx4 = test_iter.next()
+        test_next_batches64 = test_images64[idx4]
 
-            true_img_64 = graph.get_tensor_by_name("true_img_64:0")
-            true_img_224 = graph.get_tensor_by_name("true_img_224:0")
-            beta_nima = graph.get_tensor_by_name("beta_nima:0")
-            train_model = graph.get_tensor_by_name("train_model:0")
+        # true_img_64 = graph.get_tensor_by_name("true_img_64:0")
+        # true_img_224 = graph.get_tensor_by_name("true_img_224:0")
+        # beta_nima = graph.get_tensor_by_name("beta_nima:0")
+        # train_model = graph.get_tensor_by_name("train_model:0")
 
-            g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: test_next_batches64,true_img_224: test_next_batches224,beta_nima:[-2],\
-             train_model: False}) #change to test images!!!!!!!!!!
-            for k in range(batch_size):
-                matplotlib.image.imsave('gen5/true_img_{}.png'.format(k),test_next_batches64[k])
-                matplotlib.image.imsave('gen5/test_gen_img_{}.png'.format(k),g[k])
-                matplotlib.image.imsave('gen5/test_rand_gen_img.png'.format(k),rg[k])
+        g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: test_next_batches64,true_img_224: test_next_batches224,beta_nima:[-2],\
+         train_model: False}) #change to test images!!!!!!!!!!
+        for k in range(batch_size):
+            matplotlib.image.imsave('gen5/true_img_{}.png'.format(k),test_next_batches64[k])
+            matplotlib.image.imsave('gen5/test_gen_img_{}.png'.format(k),g[k])
+            matplotlib.image.imsave('gen5/test_rand_gen_img.png'.format(k),rg[k])
