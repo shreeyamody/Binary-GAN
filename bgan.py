@@ -193,18 +193,27 @@ def generator(inputs,reuse=False):#change check shape #change range of true and 
     with tf.variable_scope("gen",reuse=reuse) as scope:
         fc0 = tf.contrib.layers.fully_connected(inputs, 16384)
         fc0 = tf.reshape(fc0, [batch_size, 8, 8, 256])
-        c0 = tf.layers.conv2d_transpose(inputs = fc0,filters=256,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
-        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv0")
-        c1 = tf.layers.conv2d_transpose(inputs = c0,filters=128,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
-        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv1")
-        c2 = tf.layers.conv2d_transpose(inputs = c1,filters=32,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
-        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv2")
-        c3 = tf.layers.conv2d_transpose(inputs = c2,filters=3,kernel_size=1,activation = tf.sigmoid, strides=(1,1), \
-        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv3")
 
-        # b0 = tf.layers.batch_normalization(inputs = c3,name = "b0")#change do not need?
-        # r0 = tf.nn.elu(b0, name = "r0") #change or sigmoid?
-        return c3
+        c0 = tf.layers.conv2d_transpose(inputs = fc0,filters=256,kernel_size=5,activation = None, strides=(2,2), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv0")
+        b0 = tf.layers.batch_normalization(inputs=c0,name = "b0")
+        b0 = tf.nn.elu(b0,name = "e0")
+
+        c1 = tf.layers.conv2d_transpose(inputs = b0,filters=128,kernel_size=5,activation = None, strides=(2,2), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv1")
+        b1 = tf.layers.batch_normalization(inputs=c1,name = "b1")
+        b1 = tf.nn.elu(b1,name = "e1")
+
+        c2 = tf.layers.conv2d_transpose(inputs = b1,filters=32,kernel_size=5,activation = None, strides=(2,2), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv2")
+        b2 = tf.layers.batch_normalization(inputs=c2,name = "b2")
+        b2 = tf.nn.elu(b2,name = "e2")
+
+        c3 = tf.layers.conv2d_transpose(inputs = b2,filters=3,kernel_size=1,activation = None, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv3")
+        b3 = tf.layers.batch_normalization(inputs = c3,name = "b3")#change do not need?
+        s0 = tf.nn.sigmoid(b3, name = "s0") #change or sigmoid?
+        return s0
 
 def discriminator(inputs,reuse=False):
     # tf.Print("START `discriminator`:", inputs.shape)
@@ -330,65 +339,67 @@ with tf.Session() as sess:
     num_examples = len(features64)
     total_batch = int(np.floor(num_examples / batch_size ))
 
-    # if False:
-    for e in range(epochs):
-        print("Begin epoch ", e)
-        iter_ = data_iterator(features224)
-        for i in range(total_batch):
-            next_batches224 ,indx3= iter_.next()
-            next_batches64 = features64[indx3]
-            ss = S[indx3,:][:,indx3]
-            print("Using images ", i, " to ", i + batch_size)
-            # f_64 = features[i].reshape(batch_size,w64,w64,channels)
-            # f_224 = features224[i:i+batch_size]
-            # f_64 = features64[i:i+batch_size]
-            # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
-            # print("Begin optimizing e.")
-            e_optimizer = sess.run(e_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
-            train_model: True, s:ss})
-            # print("Begin optimizing g.")
-            for g_step in range(1):
-                g_img,g_optimizer = sess.run([gen_img,g_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224,\
-                 beta_nima:[-2], train_model: True, s:ss})
-                # g_img = np.reshape(g_img,[64,64,3])
-                for t in range(batch_size):
-                    matplotlib.image.imsave('gen6/g_img_{}_{}_{}t.png'.format(e,i,t),g_img[t])
-            # print("Begin optimizing d.")
-            for d_step in range(1):
-                d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
+    if False:
+        for e in range(epochs):
+            print("Begin epoch ", e)
+            iter_ = data_iterator(features224)
+            for i in range(total_batch):
+                next_batches224 ,indx3= iter_.next()
+                next_batches64 = features64[indx3]
+                ss = S[indx3,:][:,indx3]
+                print("Using images ", i, " to ", i + batch_size)
+                # f_64 = features[i].reshape(batch_size,w64,w64,channels)
+                # f_224 = features224[i:i+batch_size]
+                # f_64 = features64[i:i+batch_size]
+                # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
+                # print("Begin optimizing e.")
+                e_optimizer = sess.run(e_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
                 train_model: True, s:ss})
+                # print("Begin optimizing g.")
+                for g_step in range(1):
+                    g_img,g_optimizer = sess.run([gen_img,g_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224,\
+                     beta_nima:[-2], train_model: True, s:ss})
+                    # g_img = np.reshape(g_img,[64,64,3])
+                    for t in range(batch_size):
+                        matplotlib.image.imsave('gen6/g_img_{}_{}_{}.png'.format(e,i,t),g_img[t])
+                # print("Begin optimizing d.")
+                for d_step in range(1):
+                    d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
+                    train_model: True, s:ss})
 
 
-    save_path = saver.save(sess, "model.ckpt")
-    # else:
+        save_path = saver.save(sess, "model.ckpt")
+    else:
     # test images
-    test_dataset = sio.loadmat('cifar-10.mat')['test_data']  #cifar-10 data
-    test_images224 = []
-    test_images64 = []
-    print ("starting test")
-    for i in range(len(test_dataset)):
-        print ("starting test",i)
+        test_dataset = sio.loadmat('cifar-10.mat')['test_data']  #cifar-10 data
+        test_images224 = []
+        test_images64 = []
+        print ("starting test")
+        for i in range(len(test_dataset)):
+            print ("starting test",i)
 
-        t = test_dataset[:, :, :, i]
-        image224 = scipy.misc.imresize(t, [224, 224])
-        image64 = scipy.misc.imresize(t, [64, 64])
-        test_images224.append(image224)
-        test_images64.append(image64)
-    print ("Done for loop")
+            t = test_dataset[:, :, :, i]
+            image224 = scipy.misc.imresize(t, [224, 224])
+            image64 = scipy.misc.imresize(t, [64, 64])
+            test_images224.append(image224)
+            test_images64.append(image64)
+        print ("Done for loop")
 
-    test_images224 = np.array(test_images224)
-    test_images64 = np.array(test_images64)
-    print ("restoring")
+        test_images224 = np.array(test_images224)
+        test_images64 = np.array(test_images64)
+        print ("restoring")
 
-    restore = saver.restore(sess, "model.ckpt")
-    # restore_vars = chkp.print_tensors_in_checkpoint_file("model.ckpt", tensor_name='', all_tensors=True)
-    test_iter = data_iterator(test_images224)
-    test_total_batch = int(np.floor(len(test_images224) / batch_size))
-    for i in range(test_total_batch):
-        print ("test_total_batch",i)
+        restore = saver.restore(sess, "model.ckpt")
+        # restore_vars = chkp.print_tensors_in_checkpoint_file("model.ckpt", tensor_name='', all_tensors=True)
+        test_iter = data_iterator(test_images224)
+        test_total_batch = int(np.floor(len(test_images224)))
+        print("test_total_batch",test_total_batch)
+        # for i in range(test_total_batch):
+        #     print ("test_total_batch",i)
 
         test_next_batches224, idx4 = test_iter.next()
         test_next_batches64 = test_images64[idx4]
+        print("test sizes",len(test_next_batches64),len(test_next_batches224))
 
         # true_img_64 = graph.get_tensor_by_name("true_img_64:0")
         # true_img_224 = graph.get_tensor_by_name("true_img_224:0")
