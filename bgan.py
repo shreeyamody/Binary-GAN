@@ -193,27 +193,18 @@ def generator(inputs,reuse=False):#change check shape #change range of true and 
     with tf.variable_scope("gen",reuse=reuse) as scope:
         fc0 = tf.contrib.layers.fully_connected(inputs, 16384)
         fc0 = tf.reshape(fc0, [batch_size, 8, 8, 256])
-
-        c0 = tf.layers.conv2d_transpose(inputs = fc0,filters=256,kernel_size=5,activation = None, strides=(2,2), \
+        c0 = tf.layers.conv2d_transpose(inputs = fc0,filters=256,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv0")
-        b0 = tf.layers.batch_normalization(inputs=c0,name = "b0")
-        b0 = tf.nn.elu(b0,name = "e0")
-
-        c1 = tf.layers.conv2d_transpose(inputs = b0,filters=128,kernel_size=5,activation = None, strides=(2,2), \
+        c1 = tf.layers.conv2d_transpose(inputs = c0,filters=128,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv1")
-        b1 = tf.layers.batch_normalization(inputs=c1,name = "b1")
-        b1 = tf.nn.elu(b1,name = "e1")
-
-        c2 = tf.layers.conv2d_transpose(inputs = b1,filters=32,kernel_size=5,activation = None, strides=(2,2), \
+        c2 = tf.layers.conv2d_transpose(inputs = c1,filters=32,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv2")
-        b2 = tf.layers.batch_normalization(inputs=c2,name = "b2")
-        b2 = tf.nn.elu(b2,name = "e2")
-
-        c3 = tf.layers.conv2d_transpose(inputs = b2,filters=3,kernel_size=1,activation = None, strides=(1,1), \
+        c3 = tf.layers.conv2d_transpose(inputs = c2,filters=3,kernel_size=1,activation = tf.sigmoid, strides=(1,1), \
         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv3")
-        b3 = tf.layers.batch_normalization(inputs = c3,name = "b3")#change do not need?
-        s0 = tf.nn.sigmoid(b3, name = "s0") #change or sigmoid?
-        return s0
+
+        # b0 = tf.layers.batch_normalization(inputs = c3,name = "b0")#change do not need?
+        # r0 = tf.nn.elu(b0, name = "r0") #change or sigmoid?
+        return c3
 
 def discriminator(inputs,reuse=False):
     # tf.Print("START `discriminator`:", inputs.shape)
@@ -338,8 +329,6 @@ with tf.Session() as sess:
     features64=np.array(features64)
     num_examples = len(features64)
     total_batch = int(np.floor(num_examples / batch_size ))
-    next_batches64 = None
-    next_batches224 = None
 
     # if False:
     for e in range(epochs):
@@ -363,7 +352,7 @@ with tf.Session() as sess:
                  beta_nima:[-2], train_model: True, s:ss})
                 # g_img = np.reshape(g_img,[64,64,3])
                 for t in range(batch_size):
-                    matplotlib.image.imsave('gen6/g_img_{}_{}_{}.png'.format(e,i,t),g_img[t])
+                    matplotlib.image.imsave('gen6/g_img_{}_{}_{}t.png'.format(e,i,t),g_img[t])
             # print("Begin optimizing d.")
             for d_step in range(1):
                 d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
@@ -373,56 +362,45 @@ with tf.Session() as sess:
     save_path = saver.save(sess, "model.ckpt")
     # else:
     # test images
-    dataset = sio.loadmat('cifar-10.mat')  #cifar-10 data
-    # a = dataset['data_set']
-    test_dataset = dataset['test_data']
+    test_dataset = sio.loadmat('cifar-10.mat')['test_data']  #cifar-10 data
     test_images224 = []
     test_images64 = []
-    print ("starting test",len(test_dataset))
-    for i in range(len(test_dataset)):
-        print ("starting test",i)
 
+    for i in range(len(test_dataset)):
         t = test_dataset[:, :, :, i]
         image224 = scipy.misc.imresize(t, [224, 224])
         image64 = scipy.misc.imresize(t, [64, 64])
         test_images224.append(image224)
         test_images64.append(image64)
-    print ("Done for loop")
-    extra_224 = image224[:8]
-    test_images224 = test_images224 + extra_224
-    extra_64 = image64[:8]
-    test_images64 = test_images64 + extra_64
-    print("224",len(test_images224))
-    print("64",len(test_images64))
+    print("size",len(test_images64),len(test_images224))
 
-    #
+    # extra_224 = test_images224[:8]
+    # test_images224 = test_images224 + extra_224
+    # extra_64 = test_images64[:8]
+    # test_images64 = test_images64 + extra_64
+    # print("size",len(test_images64),len(test_images224))
+
+
     test_images224 = np.array(test_images224)
     test_images64 = np.array(test_images64)
-        # print ("restoring")
-
-        # restore = saver.restore(sess, "model.ckpt")
-        # restore_vars = chkp.print_tensors_in_checkpoint_file("model.ckpt", tensor_name='', all_tensors=True)
-        # test_iter = data_iterator(test_images224)
-        # test_total_batch = int(np.floor(len(test_images224)))
-        # print("test_total_batch",test_total_batch)
-        # for i in range(test_total_batch):
-        #     print ("test_total_batch",i)
-
-        # test_next_batches224, idx4 = test_iter.next()
-        # test_next_batches64 = test_images64[idx4]
-        # print("test sizes",len(test_next_batches64),len(test_next_batches224))
+    # restore = saver.restore(sess, "model.ckpt")
+    # restore_vars = chkp.print_tensors_in_checkpoint_file("model.ckpt", tensor_name='', all_tensors=True)
+    test_iter = data_iterator(test_images224)
+    test_total_batch = int(np.floor(len(test_images224) / batch_size))
+    print ("test_total_batch",test_total_batch)
+    
+    for i in range(test_total_batch):
+        test_next_batches224, idx4 = test_iter.next()
+        test_next_batches64 = test_images64[idx4]
 
         # true_img_64 = graph.get_tensor_by_name("true_img_64:0")
         # true_img_224 = graph.get_tensor_by_name("true_img_224:0")
         # beta_nima = graph.get_tensor_by_name("beta_nima:0")
         # train_model = graph.get_tensor_by_name("train_model:0")
-    print ("starting sess")
 
-    g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: test_images64,true_img_224: test_images224,beta_nima:[-2],\
-     train_model: False}) #change to test images!!!!!!!!!!
-    print ("saving pics")
-
-    for k in range(batch_size):
-        matplotlib.image.imsave('gen5/true_img_{}.png'.format(k),test_next_batches64[k])
-        matplotlib.image.imsave('gen5/test_gen_img_{}.png'.format(k),g[k])
-        matplotlib.image.imsave('gen5/test_rand_gen_img.png'.format(k),rg[k])
+        g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: test_next_batches64,true_img_224: test_next_batches224,beta_nima:[-2],\
+         train_model: False}) #change to test images!!!!!!!!!!
+        for k in range(batch_size):
+            matplotlib.image.imsave('gen5/true_img_{}.png'.format(k),test_next_batches64[k])
+            matplotlib.image.imsave('gen5/test_gen_img_{}.png'.format(k),g[k])
+            matplotlib.image.imsave('gen5/test_rand_gen_img.png'.format(k),rg[k])
