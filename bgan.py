@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 #parameters
 data_batch_size = 10000
 batch_size = 40
-epochs = 70
+epochs = 2
 lr = 0.001
 w64 = 64
 h64 = 64
@@ -336,10 +336,18 @@ with tf.Session() as sess:
     features64=np.array(features64)
     num_examples = len(features64)
     total_batch = int(np.floor(num_examples / batch_size ))
-
+    E_Loss = []
+    G_Loss = []
+    D_Loss = []
+    ep = []
     # if False:
     for e in range(epochs):
+        avg_e_loss = []
+        avg_d_loss = []
+        avg_g_loss = []
+
         print("Begin epoch ", e)
+        ep.append(e)
         iter_ = data_iterator(features224)
         for i in range(total_batch):
             next_batches224 ,indx3= iter_.next()
@@ -351,21 +359,53 @@ with tf.Session() as sess:
             # f_64 = features64[i:i+batch_size]
             # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
             # print("Begin optimizing e.")
-            e_optimizer = sess.run(e_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
+            avg_e_loss_i,e_optimizer = sess.run([e_loss,e_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
             train_model: True, s:ss})
+            avg_e_loss.append(avg_e_loss_i)
             # print("Begin optimizing g.")
             for g_step in range(1):
-                g_img,g_optimizer = sess.run([gen_img,g_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224,\
+                avg_g_loss_i,g_img,g_optimizer = sess.run([g_loss,gen_img,g_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224,\
                  beta_nima:[-2], train_model: True, s:ss})
+                avg_g_loss.append(avg_g_loss_i)
                 # g_img = np.reshape(g_img,[64,64,3])
                 for t in range(batch_size):
-                    matplotlib.image.imsave('gen6/g_img_{}_{}_{}t.png'.format(e,i,t),g_img[t])
+                    matplotlib.image.imsave('gen8/g_img_{}_{}_{}.png'.format(e,i,t),g_img[t])
             # print("Begin optimizing d.")
             for d_step in range(1):
-                d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
+                avg_d_loss_i,d_optimizer = sess.run([d_loss,d_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
                 train_model: True, s:ss})
+                avg_d_loss.append(avg_d_loss_i)
 
-    save_path = saver.save(sess, "model.ckpt")
+        print ("iteration e loss",avg_e_loss)
+        print ("iteration g loss",avg_g_loss)
+        print ("iteration d loss",avg_d_loss)
+        E_Loss.append(avg_e_loss/total_batch)
+        G_Loss.append(avg_g_loss/total_batch)
+        D_loss.append(avg_d_loss/total_batch)
+
+
+    fig = plt.figure()
+    plt.plot(ep, E_Loss)
+    plt.ylabel("Encoder losses")
+    plt.xlabel("epoch")
+    plt.show()
+    fig.savefig('e_loss.png')
+
+    fig = plt.figure()
+    plt.plot(ep, G_Loss)
+    plt.ylabel("Generator losses")
+    plt.xlabel("epoch")
+    plt.show()
+    fig.savefig('g_loss.png')
+
+    fig = plt.figure()
+    plt.plot(ep, D_Loss)
+    plt.ylabel("Decoder losses")
+    plt.xlabel("epoch")
+    plt.show()
+    fig.savefig('d_loss.png')
+
+    save_path = saver.save(sess, "model_bn.ckpt")
     # else:
     # test images
     test_dataset = sio.loadmat('cifar-10.mat')['test_data']  #cifar-10 data
@@ -407,7 +447,7 @@ with tf.Session() as sess:
         g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: test_next_batches64,true_img_224: test_next_batches224,beta_nima:[-2],\
          train_model: False}) #change to test images!!!!!!!!!!
         for k in range(batch_size):
-            matplotlib.image.imsave('gen5/true_img_{}.png'.format(k),test_next_batches64[k])
-            matplotlib.image.imsave('gen5/test_gen_img_{}.png'.format(k),g[k])
-            matplotlib.image.imsave('gen5/test_rand_gen_img.png'.format(k),rg[k])
+            matplotlib.image.imsave('gen9/true_img_{}.png'.format(k),test_next_batches64[k])
+            matplotlib.image.imsave('gen9/test_gen_img_{}.png'.format(k),g[k])
+            matplotlib.image.imsave('gen9/test_rand_gen_img.png'.format(k),rg[k])
     print("done with test images")
