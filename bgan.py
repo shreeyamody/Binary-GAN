@@ -193,18 +193,27 @@ def generator(inputs,reuse=False):#change check shape #change range of true and 
     with tf.variable_scope("gen",reuse=reuse) as scope:
         fc0 = tf.contrib.layers.fully_connected(inputs, 16384)
         fc0 = tf.reshape(fc0, [batch_size, 8, 8, 256])
-        c0 = tf.layers.conv2d_transpose(inputs = fc0,filters=256,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
-        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv0")
-        c1 = tf.layers.conv2d_transpose(inputs = c0,filters=128,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
-        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv1")
-        c2 = tf.layers.conv2d_transpose(inputs = c1,filters=32,kernel_size=5,activation = tf.nn.elu, strides=(2,2), \
-        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv2")
-        c3 = tf.layers.conv2d_transpose(inputs = c2,filters=3,kernel_size=1,activation = tf.sigmoid, strides=(1,1), \
-        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv3")
 
-        # b0 = tf.layers.batch_normalization(inputs = c3,name = "b0")#change do not need?
-        # r0 = tf.nn.elu(b0, name = "r0") #change or sigmoid?
-        return c3
+        c0 = tf.layers.conv2d_transpose(inputs = fc0,filters=256,kernel_size=5,activation = None, strides=(2,2), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv0")
+        b0 = tf.layers.batch_normalization(inputs=c0,name = "b0")
+        b0 = tf.nn.elu(b0,name = "e0")
+
+        c1 = tf.layers.conv2d_transpose(inputs = b0,filters=128,kernel_size=5,activation = None, strides=(2,2), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv1")
+        b1 = tf.layers.batch_normalization(inputs=c1,name = "b1")
+        b1 = tf.nn.elu(b1,name = "e1")
+
+        c2 = tf.layers.conv2d_transpose(inputs = b1,filters=32,kernel_size=5,activation = None, strides=(2,2), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv2")
+        b2 = tf.layers.batch_normalization(inputs=c2,name = "b2")
+        b2 = tf.nn.elu(b2,name = "e2")
+
+        c3 = tf.layers.conv2d_transpose(inputs = b2,filters=3,kernel_size=1,activation = None, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv3")
+        b3 = tf.layers.batch_normalization(inputs = c3,name = "b3")#change do not need?
+        s0 = tf.nn.sigmoid(b3, name = "s0") #change or sigmoid?
+        return s0
 
 def discriminator(inputs,reuse=False):
     # tf.Print("START `discriminator`:", inputs.shape)
