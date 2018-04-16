@@ -374,11 +374,11 @@ with tf.Session() as sess:
         test_images64.append(image64)
     print("size",len(test_images64),len(test_images224))
 
-    # extra_224 = test_images224[:8]
-    # test_images224 = test_images224 + extra_224
-    # extra_64 = test_images64[:8]
-    # test_images64 = test_images64 + extra_64
-    # print("size",len(test_images64),len(test_images224))
+    extra_224 = test_images224[:8]
+    test_images224 = test_images224 + extra_224
+    extra_64 = test_images64[:8]
+    test_images64 = test_images64 + extra_64
+    print("size",len(test_images64),len(test_images224))
 
 
     test_images224 = np.array(test_images224)
@@ -388,7 +388,7 @@ with tf.Session() as sess:
     test_iter = data_iterator(test_images224)
     test_total_batch = int(np.floor(len(test_images224) / batch_size))
     print ("test_total_batch",test_total_batch)
-    
+
     for i in range(test_total_batch):
         test_next_batches224, idx4 = test_iter.next()
         test_next_batches64 = test_images64[idx4]
@@ -404,3 +404,4 @@ with tf.Session() as sess:
             matplotlib.image.imsave('gen5/true_img_{}.png'.format(k),test_next_batches64[k])
             matplotlib.image.imsave('gen5/test_gen_img_{}.png'.format(k),g[k])
             matplotlib.image.imsave('gen5/test_rand_gen_img.png'.format(k),rg[k])
+    print("done with test images")
