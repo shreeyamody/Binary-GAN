@@ -376,12 +376,12 @@ with tf.Session() as sess:
                 train_model: True, s:ss})
                 avg_d_loss.append(avg_d_loss_i)
 
-        print ("iteration e loss",avg_e_loss)
-        print ("iteration g loss",avg_g_loss)
-        print ("iteration d loss",avg_d_loss)
+        print ("iteration e loss",avg_e_loss,len(avg_e_loss))
+        print ("iteration g loss",avg_g_loss,len(avg_e_loss))
+        print ("iteration d loss",avg_d_loss,len(avg_e_loss))
         E_Loss.append(sum(avg_e_loss)/float(total_batch))
         G_Loss.append(sum(avg_g_loss)/float(total_batch))
-        D_loss.append(sum(avg_d_loss)/float(total_batch))
+        D_Loss.append(sum(avg_d_loss)/float(total_batch))
 
 
     fig = plt.figure()
