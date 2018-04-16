@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 #parameters
 data_batch_size = 10000
 batch_size = 40
-epochs = 2
+epochs = 50
 lr = 0.001
 w64 = 64
 h64 = 64
@@ -78,89 +78,89 @@ def read_data():
 
     return x224, x64
 
-# def Encoder(inputs): # change use 224 shape
-#     with tf.variable_scope("enc", reuse=False) as scope:
-#
-#         c0 = tf.layers.conv2d(inputs = inputs,filters=64,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv0")
-#
-#         c1 = tf.layers.conv2d(inputs = c0,filters=64,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv1")
-#
-#         mp0 = tf.layers.max_pooling2d(inputs = c1,pool_size = 2,strides = 2,  padding='same',name="mp0")
-#
-#
-#
-#         c2 = tf.layers.conv2d(inputs = mp0,filters=128,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv2")
-#
-#         c3 = tf.layers.conv2d(inputs = c2,filters=128,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv3")
-#
-#         mp1 = tf.layers.max_pooling2d(inputs = c3,pool_size = 2,strides = 2,  padding='same',name="mp1")
-#
-#
-#
-#         c4 = tf.layers.conv2d(inputs = mp1,filters=256,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv4")
-#
-#         c5 = tf.layers.conv2d(inputs = c4,filters=256,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv5")
-#
-#         c6 = tf.layers.conv2d(inputs = c5,filters=256,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv6")
-#
-#         c6 = tf.layers.conv2d(inputs = c6,filters=256,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv6_extra")
-#
-#         # change add conv layer
-#
-#         mp2 = tf.layers.max_pooling2d(inputs = c6,pool_size = 2,strides = 2,  padding='same',name="mp2")
-#
-#
-#
-#         c7 = tf.layers.conv2d(inputs = mp2,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv7")
-#
-#         c8 = tf.layers.conv2d(inputs = c7,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv8")
-#
-#         c9 = tf.layers.conv2d(inputs = c8,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv9")
-#
-#         c9 = tf.layers.conv2d(inputs = c9,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv9_extra")
-#
-#         #conv layer
-#         mp3 = tf.layers.max_pooling2d(inputs = c9,pool_size = 2,strides = 2,  padding='same',name="mp3")
-#
-#
-#
-#         c10 = tf.layers.conv2d(inputs = mp3,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv10")
-#
-#         c11 = tf.layers.conv2d(inputs = c10,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv11")
-#
-#         c12 = tf.layers.conv2d(inputs = c11,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv12")
-#
-#         c12 = tf.layers.conv2d(inputs = c12,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
-#         kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv12_extra")
-#
-#         #conv layer
-#         mp4 = tf.layers.max_pooling2d(inputs = c12,pool_size = 2,strides = 2,  padding='same',name="mp4")
-#
-#
-#         fc0 = tf.contrib.layers.fully_connected(mp4, 4096,activation_fn=tf.nn.elu)
-#         fc1 = tf.contrib.layers.fully_connected(fc0, 4096,activation_fn=tf.nn.elu)
-#         fc2 = tf.contrib.layers.fully_connected(fc1, 32)
-#         t0 = tf.nn.tanh(fc2)
-#
-#
-#         #change save fully_connected
-#
-#         return t0, fc2
+def Encoder(inputs): # change use 224 shape
+    with tf.variable_scope("enc", reuse=False) as scope:
+
+        c0 = tf.layers.conv2d(inputs = inputs,filters=64,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv0")
+
+        c1 = tf.layers.conv2d(inputs = c0,filters=64,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv1")
+
+        mp0 = tf.layers.max_pooling2d(inputs = c1,pool_size = 2,strides = 2,  padding='same',name="mp0")
+
+
+
+        c2 = tf.layers.conv2d(inputs = mp0,filters=128,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv2")
+
+        c3 = tf.layers.conv2d(inputs = c2,filters=128,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv3")
+
+        mp1 = tf.layers.max_pooling2d(inputs = c3,pool_size = 2,strides = 2,  padding='same',name="mp1")
+
+
+
+        c4 = tf.layers.conv2d(inputs = mp1,filters=256,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv4")
+
+        c5 = tf.layers.conv2d(inputs = c4,filters=256,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv5")
+
+        c6 = tf.layers.conv2d(inputs = c5,filters=256,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv6")
+
+        c6 = tf.layers.conv2d(inputs = c6,filters=256,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv6_extra")
+
+        # change add conv layer
+
+        mp2 = tf.layers.max_pooling2d(inputs = c6,pool_size = 2,strides = 2,  padding='same',name="mp2")
+
+
+
+        c7 = tf.layers.conv2d(inputs = mp2,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv7")
+
+        c8 = tf.layers.conv2d(inputs = c7,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv8")
+
+        c9 = tf.layers.conv2d(inputs = c8,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv9")
+
+        c9 = tf.layers.conv2d(inputs = c9,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv9_extra")
+
+        #conv layer
+        mp3 = tf.layers.max_pooling2d(inputs = c9,pool_size = 2,strides = 2,  padding='same',name="mp3")
+
+
+
+        c10 = tf.layers.conv2d(inputs = mp3,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv10")
+
+        c11 = tf.layers.conv2d(inputs = c10,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv11")
+
+        c12 = tf.layers.conv2d(inputs = c11,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv12")
+
+        c12 = tf.layers.conv2d(inputs = c12,filters=512,kernel_size=3,activation = tf.nn.elu, strides=(1,1), \
+        kernel_initializer = tf.contrib.layers.variance_scaling_initializer(),padding = "SAME",name = "conv12_extra")
+
+        #conv layer
+        mp4 = tf.layers.max_pooling2d(inputs = c12,pool_size = 2,strides = 2,  padding='same',name="mp4")
+
+
+        fc0 = tf.contrib.layers.fully_connected(mp4, 4096,activation_fn=tf.nn.elu)
+        fc1 = tf.contrib.layers.fully_connected(fc0, 4096,activation_fn=tf.nn.elu)
+        fc2 = tf.contrib.layers.fully_connected(fc1, 32)
+        t0 = tf.nn.tanh(fc2)
+
+
+        #change save fully_connected
+
+        return t0, fc2
 
 def hash_layer_new(z_x_mean,z_x_log_sigma_sq):
     eps = tf.random_normal((batch_size, 32), 0, 1) # normal dist for VAE
@@ -265,6 +265,8 @@ def D_losses(disc_true_image,disc_rand_gen_img):
 
     return D_loss
 
+
+
 def G_losses(disc_rand_gen_img):
     #adversarial loss
     # _,true_out = discriminator(true_img,True) # save output value in C_loss
@@ -276,17 +278,16 @@ def G_losses(disc_rand_gen_img):
 
 # encoder_output = Encoder(true_img_224)
 rand_z = tf.random_normal((batch_size, 32), 0, 1)
-with tf.variable_scope("enc") as scope:
+with tf.variable_scope("enc"):
     vgg_net = Vgg19('./vgg19.npy', codelen=32)
     vgg_net.build(true_img_224, beta_nima, train_model)
     z_x_mean = vgg_net.fc9
     z_x_log_sigma_sq = vgg_net.fc10
 
 # print("encoder_output.shape=", z_x_mean.shape)
-
+b = hash_layer_new(z_x_mean,z_x_log_sigma_sq)
 # print("b.shape=", b.shape)
 with tf.variable_scope("gen") as scope:
-    b = hash_layer_new(z_x_mean,z_x_log_sigma_sq)
     gen_img = generator(b)
     rand_gen_img = generator(rand_z,True)
 
@@ -327,18 +328,10 @@ with tf.Session() as sess:
     features64=np.array(features64)
     num_examples = len(features64)
     total_batch = int(np.floor(num_examples / batch_size ))
-    E_Loss = []
-    G_Loss = []
-    D_Loss = []
-    ep = []
-    # if False:
-    for e in range(epochs):
-        avg_e_loss = []
-        avg_d_loss = []
-        avg_g_loss = []
 
+
+    for e in range(epochs):
         print("Begin epoch ", e)
-        ep.append(e)
         iter_ = data_iterator(features224)
         for i in range(total_batch):
             next_batches224 ,indx3= iter_.next()
@@ -350,66 +343,32 @@ with tf.Session() as sess:
             # f_64 = features64[i:i+batch_size]
             # optimizer = sess.run(e_optim,feed_dict = {true_img_64: f_64, true_img_224: })
             # print("Begin optimizing e.")
-            avg_e_loss_i,e_optimizer = sess.run([e_loss,e_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
+            e_optimizer = sess.run(e_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
             train_model: True, s:ss})
-            avg_e_loss.append(avg_e_loss_i)
             # print("Begin optimizing g.")
             for g_step in range(1):
-                avg_g_loss_i,g_img,g_optimizer = sess.run([g_loss,gen_img,g_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224,\
+                g_img,g_optimizer = sess.run([gen_img,g_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224,\
                  beta_nima:[-2], train_model: True, s:ss})
-                avg_g_loss.append(avg_g_loss_i)
                 # g_img = np.reshape(g_img,[64,64,3])
-                for t in range(batch_size):
-                    matplotlib.image.imsave('gen8/g_img_{}_{}_{}.png'.format(e,i,t),g_img[t])
+                matplotlib.image.imsave('gen10/g_img_{}_{}.png'.format(e,i),g_img[0])
             # print("Begin optimizing d.")
             for d_step in range(1):
-                avg_d_loss_i,d_optimizer = sess.run([d_loss,d_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
+                d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
                 train_model: True, s:ss})
-                avg_d_loss.append(avg_d_loss_i)
-
-        print ("iteration e loss",avg_e_loss,len(avg_e_loss))
-        print ("iteration g loss",avg_g_loss,len(avg_e_loss))
-        print ("iteration d loss",avg_d_loss,len(avg_e_loss))
-        E_Loss.append(sum(avg_e_loss)/float(total_batch))
-        G_Loss.append(sum(avg_g_loss)/float(total_batch))
-        D_Loss.append(sum(avg_d_loss)/float(total_batch))
 
 
-    fig = plt.figure()
-    plt.plot(ep, E_Loss)
-    plt.ylabel("Encoder losses")
-    plt.xlabel("epoch")
-    plt.show()
-    fig.savefig('e_loss.png')
-
-    fig = plt.figure()
-    plt.plot(ep, G_Loss)
-    plt.ylabel("Generator losses")
-    plt.xlabel("epoch")
-    plt.show()
-    fig.savefig('g_loss.png')
-
-    fig = plt.figure()
-    plt.plot(ep, D_Loss)
-    plt.ylabel("Decoder losses")
-    plt.xlabel("epoch")
-    plt.show()
-    fig.savefig('d_loss.png')
-
-    save_path = saver.save(sess, "model_bn.ckpt")
+    save_path = saver.save(sess, "model.ckpt")
     # else:
-    # test images
+        # test images
     test_dataset = sio.loadmat('cifar-10.mat')['test_data']  #cifar-10 data
     test_images224 = []
     test_images64 = []
-
     for i in range(len(test_dataset)):
         t = test_dataset[:, :, :, i]
         image224 = scipy.misc.imresize(t, [224, 224])
         image64 = scipy.misc.imresize(t, [64, 64])
         test_images224.append(image224)
         test_images64.append(image64)
-    print("size",len(test_images64),len(test_images224))
 
     extra_224 = test_images224[:8]
     test_images224 = test_images224 + extra_224
@@ -417,28 +376,18 @@ with tf.Session() as sess:
     test_images64 = test_images64 + extra_64
     print("size",len(test_images64),len(test_images224))
 
-
     test_images224 = np.array(test_images224)
     test_images64 = np.array(test_images64)
-    # restore = saver.restore(sess, "model.ckpt")
+    # restore = saver.restore(sess, "   model.ckpt")
     # restore_vars = chkp.print_tensors_in_checkpoint_file("model.ckpt", tensor_name='', all_tensors=True)
     test_iter = data_iterator(test_images224)
     test_total_batch = int(np.floor(len(test_images224) / batch_size))
-    print ("test_total_batch",test_total_batch)
-
     for i in range(test_total_batch):
         test_next_batches224, idx4 = test_iter.next()
         test_next_batches64 = test_images64[idx4]
-
-        # true_img_64 = graph.get_tensor_by_name("true_img_64:0")
-        # true_img_224 = graph.get_tensor_by_name("true_img_224:0")
-        # beta_nima = graph.get_tensor_by_name("beta_nima:0")
-        # train_model = graph.get_tensor_by_name("train_model:0")
-
         g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: test_next_batches64,true_img_224: test_next_batches224,beta_nima:[-2],\
          train_model: False}) #change to test images!!!!!!!!!!
         for k in range(batch_size):
-            matplotlib.image.imsave('gen9/true_img_{}.png'.format(k),test_next_batches64[k])
-            matplotlib.image.imsave('gen9/test_gen_img_{}.png'.format(k),g[k])
-            matplotlib.image.imsave('gen9/test_rand_gen_img.png'.format(k),rg[k])
-    print("done with test images")
+            matplotlib.image.imsave('gen11/true_img_{}.png'.format(k),test_next_batches64[k])
+            matplotlib.image.imsave('gen11/test_gen_img_{}.png'.format(k),g[k])
+            matplotlib.image.imsave('gen11/test_rand_gen_img.png'.format(k),rg[k])
