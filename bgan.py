@@ -373,24 +373,31 @@ with tf.Session() as sess:
     save_path = saver.save(sess, "model.ckpt")
     # else:
     # test images
-        # dataset = sio.loadmat('cifar-10.mat')  #cifar-10 data
+        dataset = sio.loadmat('cifar-10.mat')  #cifar-10 data
         # a = dataset['data_set']
-        # test_dataset = dataset['test_data']
-        # test_images224 = []
-        # test_images64 = []
-        # print ("starting test",len(a),len(test_dataset))
-        # for i in range(len(test_dataset)):
-        #     print ("starting test",i)
+        test_dataset = dataset['test_data']
+        test_images224 = []
+        test_images64 = []
+        print ("starting test",len(test_dataset))
+        for i in range(len(test_dataset)):
+            print ("starting test",i)
+
+            t = test_dataset[:, :, :, i]
+            image224 = scipy.misc.imresize(t, [224, 224])
+            image64 = scipy.misc.imresize(t, [64, 64])
+            test_images224.append(image224)
+            test_images64.append(image64)
+        print ("Done for loop")
+        extra_224 = image224[:8]
+        test_images224 = test_images224 + extra_224
+        extra_64 = image64[:8]
+        test_images64 = test_images64 + extra_64
+        print("224",len(test_images224))
+        print("64",len(test_images64))
+
         #
-        #     t = test_dataset[:, :, :, i]
-        #     image224 = scipy.misc.imresize(t, [224, 224])
-        #     image64 = scipy.misc.imresize(t, [64, 64])
-        #     test_images224.append(image224)
-        #     test_images64.append(image64)
-        # print ("Done for loop")
-        #
-        # test_images224 = np.array(test_images224)
-        # test_images64 = np.array(test_images64)
+        test_images224 = np.array(test_images224)
+        test_images64 = np.array(test_images64)
         # print ("restoring")
 
         # restore = saver.restore(sess, "model.ckpt")
@@ -411,7 +418,7 @@ with tf.Session() as sess:
         # train_model = graph.get_tensor_by_name("train_model:0")
     print ("starting sess")
 
-    g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: next_batches64,true_img_224: next_batches224,beta_nima:[-2],\
+    g,rg = sess.run([gen_img,rand_gen_img], feed_dict={true_img_64: test_images64,true_img_224: test_images224,beta_nima:[-2],\
      train_model: False}) #change to test images!!!!!!!!!!
     print ("saving pics")
 
