@@ -379,9 +379,9 @@ with tf.Session() as sess:
         print ("iteration e loss",avg_e_loss)
         print ("iteration g loss",avg_g_loss)
         print ("iteration d loss",avg_d_loss)
-        E_Loss.append(avg_e_loss/total_batch)
-        G_Loss.append(avg_g_loss/total_batch)
-        D_loss.append(avg_d_loss/total_batch)
+        E_Loss.append(sum(avg_e_loss)/float(total_batch))
+        G_Loss.append(sum(avg_g_loss)/float(total_batch))
+        D_loss.append(sum(avg_d_loss)/float(total_batch))
 
 
     fig = plt.figure()
