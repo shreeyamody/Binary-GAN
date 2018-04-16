@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 #parameters
 data_batch_size = 10000
 batch_size = 40
-epochs = 1
+epochs = 70
 lr = 0.001
 w64 = 64
 h64 = 64
@@ -265,8 +265,6 @@ def D_losses(disc_true_image,disc_rand_gen_img):
 
     return D_loss
 
-
-
 def G_losses(disc_rand_gen_img):
     #adversarial loss
     # _,true_out = discriminator(true_img,True) # save output value in C_loss
@@ -357,7 +355,6 @@ with tf.Session() as sess:
             for d_step in range(1):
                 d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
                 train_model: True, s:ss})
-
 
     save_path = saver.save(sess, "model.ckpt")
     # else:
