@@ -350,7 +350,8 @@ with tf.Session() as sess:
                 g_img,g_optimizer = sess.run([gen_img,g_optim],feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224,\
                  beta_nima:[-2], train_model: True, s:ss})
                 # g_img = np.reshape(g_img,[64,64,3])
-                matplotlib.image.imsave('gen10/g_img_{}_{}.png'.format(e,i),g_img[0])
+                for t in range(batch_size):
+                    matplotlib.image.imsave('gen10/g_img_{}_{}_{}.png'.format(e,i,t),g_img[t])
             # print("Begin optimizing d.")
             for d_step in range(1):
                 d_optimizer = sess.run(d_optim,feed_dict = {true_img_64: next_batches64, true_img_224: next_batches224, beta_nima:[-2], \
